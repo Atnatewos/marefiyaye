@@ -1,0 +1,79 @@
+/**
+ * @file apps/web/styles/utilities/responsive.css
+ *
+ * Responsive breakpoint utilities.
+ *
+ * Why this file exists:
+ *   - Reference prototype uses `grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4`.
+ *   - These classes apply their styles only above the specified breakpoint.
+ *   - Breakpoints:
+ *       sm: 640px  (small tablets)
+ *       md: 768px  (tablets)
+ *       lg: 1024px (small laptops)
+ *       xl: 1280px (desktops)
+ */
+
+/* ═══════════════════════════════════════════════════════════════════════ */
+/* SM BREAKPOINT — 640px+                                                 */
+/* ═══════════════════════════════════════════════════════════════════════ */
+@media (min-width: 640px) {
+  .sm\:block { display: block; }
+  .sm\:hidden { display: none; }
+  .sm\:flex { display: flex; }
+  .sm\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .sm\:flex-row { flex-direction: row; }
+  .sm\:text-left { text-align: left; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════ */
+/* MD BREAKPOINT — 768px+                                                 */
+/* ═══════════════════════════════════════════════════════════════════════ */
+@media (min-width: 768px) {
+  .md\:flex { display: flex; }
+  .md\:hidden { display: none; }
+  .md\:block { display: block; }
+  .md\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .md\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .md\:flex-row { flex-direction: row; }
+  .md\:flex-col { flex-direction: column; }
+  .md\:col-span-2 { grid-column: span 2 / span 2; }
+  .md\:w-auto { width: auto; }
+  .md\:border-b-0 { border-bottom: none; }
+  .md\:border-r { border-right: 1px solid var(--border); }
+  .md\:text-base { font-size: var(--text-base); }
+  .md\:text-xl { font-size: var(--text-xl); }
+  .md\:text-3xl { font-size: var(--text-3xl); }
+  .md\:text-5xl { font-size: var(--text-5xl); }
+  .md\:p-10 { padding: var(--space-10); }
+  .md\:px-6 { padding-left: var(--space-6); padding-right: var(--space-6); }
+  .md\:justify-end { justify-content: flex-end; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════ */
+/* LG BREAKPOINT — 1024px+                                                */
+/* ═══════════════════════════════════════════════════════════════════════ */
+@media (min-width: 1024px) {
+  .lg\:flex { display: flex; }
+  .lg\:hidden { display: none; }
+  .lg\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .lg\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .lg\:col-span-1 { grid-column: span 1 / span 1; }
+  .lg\:col-span-2 { grid-column: span 2 / span 2; }
+  .lg\:px-8 { padding-left: var(--space-8); padding-right: var(--space-8); }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════ */
+/* XL BREAKPOINT — 1280px+                                                */
+/* ═══════════════════════════════════════════════════════════════════════ */
+@media (min-width: 1280px) {
+  .xl\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+/* ─── NO-SCROLLBAR (horizontal pill scrollers) ────────────────────────── */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

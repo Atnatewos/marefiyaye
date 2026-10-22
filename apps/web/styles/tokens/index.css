@@ -1,0 +1,21 @@
+/**
+ * @file apps/web/styles/tokens/index.css
+ *
+ * Barrel import for all design tokens.
+ *
+ * Why this file exists:
+ *   - `styles/index.css` imports this single file instead of 9 separate ones.
+ *   - Order matters: colors first (semantic tokens reference them),
+ *     then typography, spacing, radius, shadows, motion, z-index, layout,
+ *     then dark-theme (overrides must come last).
+ */
+
+@import './colors.css';
+@import './typography.css';
+@import './spacing.css';
+@import './radius.css';
+@import './shadows.css';
+@import './motion.css';
+@import './z-index.css';
+@import './layout.css';
+@import './dark-theme.css';

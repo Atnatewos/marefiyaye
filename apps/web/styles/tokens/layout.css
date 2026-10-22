@@ -1,0 +1,24 @@
+/**
+ * @file apps/web/styles/tokens/layout.css
+ *
+ * Structural layout dimensions.
+ *
+ * Why this file exists:
+ *   - Container, sidebar, and topbar widths/heights appear in multiple layouts.
+ *   - Reference prototype uses `max-w-7xl` (1280px) for the container.
+ *   - Dashboard sidebar needs a fixed width so the main content can shift.
+ */
+
+:root {
+  /* ─── CONTAINER ────────────────────────────────────────────────────── */
+  --container-max: 1280px;
+  --container-px:  var(--space-4);
+
+  /* ─── SIDEBAR ──────────────────────────────────────────────────────── */
+  --sidebar-width:         260px;
+  --sidebar-width-collapsed: 72px;
+
+  /* ─── TOPBAR ───────────────────────────────────────────────────────── */
+  --topbar-height:  64px;
+  --navbar-height:  80px;
+}

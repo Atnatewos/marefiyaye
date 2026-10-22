@@ -1,0 +1,19 @@
+{
+  "name": "marefiyaye",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": ["apps/*", "packages/*"],
+  "scripts": {
+    "dev:web":     "npm run dev   -w @marefiyaye/web",
+    "dev:api":     "npm run dev   -w @marefiyaye/api",
+    "build":       "npm run build -w @marefiyaye/web",
+    "start":       "npm run start -w @marefiyaye/web",
+    "lint":        "npm run lint  -w @marefiyaye/web",
+    "db:migrate":  "npm run migrate -w @marefiyaye/api",
+    "db:seed":     "npm run seed    -w @marefiyaye/api"
+  },
+  "engines": { "node": ">=20" },
+  "devDependencies": {
+    "prettier": "3.3.3"
+  }
+}

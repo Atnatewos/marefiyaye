@@ -1,0 +1,57 @@
+/**
+ * @file apps/web/styles/utilities/position.css
+ *
+ * Position and layering utilities.
+ *
+ * Why this file exists:
+ *   - Absolute-positioned badges over images, fixed navbars, sticky sidebars.
+ *   - Z-index utilities reference `--z-*` tokens so layering is controlled.
+ */
+
+/* ─── POSITION ────────────────────────────────────────────────────────── */
+.relative { position: relative; }
+.absolute { position: absolute; }
+.fixed    { position: fixed; }
+.sticky   { position: sticky; top: 0; }
+.static   { position: static; }
+
+/* ─── INSETS ──────────────────────────────────────────────────────────── */
+.inset-0  { top: 0; right: 0; bottom: 0; left: 0; }
+
+/* ─── TOP ─────────────────────────────────────────────────────────────── */
+.top-0  { top: 0; }
+.top-1  { top: var(--space-1); }
+.top-2  { top: var(--space-2); }
+.top-3  { top: var(--space-3); }
+.top-4  { top: var(--space-4); }
+.top-5  { top: var(--space-5); }
+.top-28 { top: 7rem; }
+
+/* ─── RIGHT ───────────────────────────────────────────────────────────── */
+.right-0  { right: 0; }
+.right-1  { right: var(--space-1); }
+.right-2  { right: var(--space-2); }
+.right-3  { right: var(--space-3); }
+.right-4  { right: var(--space-4); }
+.right-5  { right: var(--space-5); }
+
+/* ─── BOTTOM ──────────────────────────────────────────────────────────── */
+.bottom-0 { bottom: 0; }
+.bottom-4 { bottom: var(--space-4); }
+
+/* ─── LEFT ────────────────────────────────────────────────────────────── */
+.left-0 { left: 0; }
+.left-3 { left: var(--space-3); }
+.left-4 { left: var(--space-4); }
+
+/* ─── NEGATIVE OFFSETS (for badge positioning) ────────────────────────── */
+.-top-1  { top: calc(var(--space-1) * -1); }
+.-right-1 { right: calc(var(--space-1) * -1); }
+
+/* ─── Z-INDEX ─────────────────────────────────────────────────────────── */
+.z-0    { z-index: var(--z-base); }
+.z-10   { z-index: 10; }
+.z-20   { z-index: 20; }
+.z-30   { z-index: 30; }
+.z-40   { z-index: var(--z-sticky); }
+.z-50   { z-index: var(--z-modal); }

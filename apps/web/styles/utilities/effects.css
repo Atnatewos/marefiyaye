@@ -1,0 +1,92 @@
+/**
+ * @file apps/web/styles/utilities/effects.css
+ *
+ * Border radius, shadow, transition, and opacity utilities.
+ *
+ * Why this file exists:
+ *   - `rounded-2xl shadow-md transition` appears on nearly every card/button.
+ *   - Centralizing these eliminates repeated styling.
+ *   - All values reference Batch 1 tokens.
+ */
+
+/* ─── BORDER RADIUS ───────────────────────────────────────────────────── */
+.rounded-none { border-radius: 0; }
+.rounded-xs   { border-radius: var(--radius-xs); }
+.rounded-sm   { border-radius: var(--radius-sm); }
+.rounded-md   { border-radius: var(--radius-md); }
+.rounded-lg   { border-radius: var(--radius-lg); }
+.rounded-xl   { border-radius: var(--radius-xl); }
+.rounded-2xl  { border-radius: var(--radius-2xl); }
+.rounded-3xl  { border-radius: var(--radius-3xl); }
+.rounded-full { border-radius: var(--radius-full); }
+
+/* ─── BORDERS ─────────────────────────────────────────────────────────── */
+.border    { border: 1px solid var(--border); }
+.border-2  { border: 2px solid var(--border); }
+.border-0  { border: none; }
+.border-t  { border-top: 1px solid var(--border); }
+.border-b  { border-bottom: 1px solid var(--border); }
+.border-l  { border-left: 1px solid var(--border); }
+.border-r  { border-right: 1px solid var(--border); }
+
+/* ─── SHADOWS ─────────────────────────────────────────────────────────── */
+.shadow-none { box-shadow: none; }
+.shadow-xs   { box-shadow: var(--shadow-xs); }
+.shadow-sm   { box-shadow: var(--shadow-sm); }
+.shadow-md   { box-shadow: var(--shadow-md); }
+.shadow-lg   { box-shadow: var(--shadow-lg); }
+.shadow-xl   { box-shadow: var(--shadow-xl); }
+.shadow-2xl  { box-shadow: var(--shadow-2xl); }
+.shadow-brand{ box-shadow: var(--shadow-brand); }
+.shadow-inner{ box-shadow: var(--shadow-inset); }
+
+/* ─── TRANSITIONS ─────────────────────────────────────────────────────── */
+.transition {
+  transition-property: background-color, border-color, color, opacity, box-shadow, transform;
+  transition-duration: var(--duration-normal);
+  transition-timing-function: var(--ease-standard);
+}
+
+.transition-fast {
+  transition-property: background-color, border-color, color, opacity, box-shadow, transform;
+  transition-duration: var(--duration-fast);
+  transition-timing-function: var(--ease-standard);
+}
+
+.transition-slow {
+  transition-property: background-color, border-color, color, opacity, box-shadow, transform;
+  transition-duration: var(--duration-slow);
+  transition-timing-function: var(--ease-standard);
+}
+
+/* ─── OPACITY ─────────────────────────────────────────────────────────── */
+.opacity-0   { opacity: 0; }
+.opacity-50  { opacity: 0.5; }
+.opacity-60  { opacity: 0.6; }
+.opacity-75  { opacity: 0.75; }
+.opacity-100 { opacity: 1; }
+
+/* ─── CURSOR ──────────────────────────────────────────────────────────── */
+.cursor-pointer     { cursor: pointer; }
+.cursor-not-allowed { cursor: not-allowed; }
+.cursor-default     { cursor: default; }
+
+/* ─── TRANSFORMS ──────────────────────────────────────────────────────── */
+.scale-100 { transform: scale(1); }
+.scale-105 { transform: scale(1.05); }
+.scale-110 { transform: scale(1.10); }
+.-translate-y-1 { transform: translateY(-4px); }
+
+/* ─── BACKDROP BLUR ───────────────────────────────────────────────────── */
+.backdrop-blur-sm {
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+.backdrop-blur-md {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.backdrop-blur-lg {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}

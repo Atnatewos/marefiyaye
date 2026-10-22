@@ -1,0 +1,23 @@
+/**
+ * @file apps/web/styles/tokens/z-index.css
+ *
+ * Z-index scale.
+ *
+ * Why this file exists:
+ *   - Random z-index values (9999, 10000) cause stacking bugs.
+ *   - Named layers document the intended hierarchy:
+ *       base → dropdown → sticky → fixed → backdrop → modal → popover → tooltip → toast
+ *   - Toasts must sit above modals; modals must sit above sticky navbars.
+ */
+
+:root {
+  --z-base:     0;
+  --z-dropdown: 1000;
+  --z-sticky:   1020;
+  --z-fixed:    1030;
+  --z-backdrop: 1040;
+  --z-modal:    1050;
+  --z-popover:  1060;
+  --z-tooltip:  1070;
+  --z-toast:    1080;
+}

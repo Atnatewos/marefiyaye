@@ -1,0 +1,24 @@
+/**
+ * @file apps/web/styles/tokens/motion.css
+ *
+ * Animation duration and easing tokens.
+ *
+ * Why this file exists:
+ *   - Consistent motion feels professional; random timings feel cheap.
+ *   - fast (150ms) → micro-interactions like button hover
+ *   - normal (250ms) → modals, dropdowns, toast slide
+ *   - slow (400ms) → page transitions, drawer slides
+ */
+
+:root {
+  /* ─── DURATIONS ────────────────────────────────────────────────────── */
+  --duration-fast:   150ms;
+  --duration-normal: 250ms;
+  --duration-slow:   400ms;
+
+  /* ─── EASINGS ──────────────────────────────────────────────────────── */
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-enter:    cubic-bezier(0, 0, 0.2, 1);
+  --ease-exit:     cubic-bezier(0.4, 0, 1, 1);
+  --ease-bounce:   cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}

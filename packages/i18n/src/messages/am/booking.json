@@ -1,0 +1,105 @@
+{
+  "widget": {
+    "perNight": "በሌሊት",
+    "guestsLabel": "እንግዶች (ከፍተኛ {{max}})",
+    "selectDates": "ለመያዝ ቀናትን ይምረጡ",
+    "bookButton": "በባንክ ዝውውር ያዙ",
+    "signInPrompt": "ለመያዝ እባክዎ ይግቡ",
+    "nightsLabel_one": "{{count}} ሌሊት",
+    "nightsLabel_other": "{{count}} ሌሊቶች",
+    "discountApplied": "ቅናሽ ተተግብሯል",
+    "serviceFee": "የአገልግሎት ክፍያ",
+    "total": "ጠቅላላ",
+    "bookFailed": "ቦታ ማስያዝ አልተቻለም"
+  },
+  "checkout": {
+    "title": "ክፍያዎን ያጠናቅቁ",
+    "description": "{{amount}} በ{{method}} ያስተላልፉ",
+    "totalPayable": "ጠቅላላ ክፍያ",
+    "nightLine": "{{nights}} ሌሊት · {{title}}",
+    "methodLabel": "የክፍያ ዘዴ",
+    "referenceLabel": "የ FT ግብይት ማጣቀሻ",
+    "referencePlaceholder": "FT24029X890A",
+    "referenceHelp": "በባንክ SMS ደረሰኝዎ ውስጥ ይገኛል",
+    "receiptLabel": "የደረሰኝ ሊንክ (አማራጭ)",
+    "receiptPlaceholder": "https://...",
+    "receiptHelp": "የደረሰኝ ምስል ሊንክ ይለጥፉ። የምስል መጫኛ በሚቀጥለው ይመጣል።",
+    "notice": "አስተዳዳሪው በ24 ሰዓት ውስጥ ያረጋግጣል። ሁኔታውን በጉዞዎቼ ያዩ።",
+    "submit": "ክፍያ አስገባ",
+    "cancel": "ሰርዝ",
+    "submitSuccess": "ክፍያ ገብቷል! አስተዳዳሪው ያረጋግጣል።",
+    "submitError": "ክፍያ ማስገባት አልተቻለም",
+    "referenceRequired": "ከባንክ መተግበሪያዎ FT ማጣቀሻ ያስገቡ"
+  },
+  "trips": {
+    "title": "ጉዞዎቼ",
+    "description": "ቦታ ማስያዝዎችዎ — ከመጠባበቅ እስከ መረጋገጥ።",
+    "empty": {
+      "title": "እስካሁን ጉዞ የለም",
+      "description": "ንብረቶችን ያስሱ እና የመጀመሪያ ቆይታዎን ይያዙ።",
+      "action": "ንብረቶችን ያስሱ"
+    },
+    "loadError": "ጉዞዎችን መጫን አልተቻለም"
+  },
+  "listing": {
+    "wizard": {
+        "title": "ንብረት ይፍጠሩ",
+        "description": "በ5 ቀላል ደረጃዎች ንብረትዎን ያክሉ።",
+        "submit": "ንብረቱን አሳውቅ",
+        "success": "ንብረቱ በተሳካ ሁኔታ ታውቋል!",
+        "failed": "ንብረቱን ማሳወቅ አልተቻለም",
+        "steps": {
+        "basics": "መሠረታዊ",
+        "stayType": "የቆይታ ዓይነት",
+        "pricing": "ዋጋ",
+        "photos": "ፎቶዎች",
+        "review": "ግምገማ"
+        },
+        "basics": {
+        "titleLabel": "የንብረት ርዕስ",
+        "titlePlaceholder": "ለምሳሌ፡ በቦሌ የሚገኝ ዘመናዊ ፔንትሃውስ",
+        "titleAmLabel": "ርዕስ (አማርኛ)",
+        "titleAmPlaceholder": "በቦሌ የሚገኝ ዘመናዊ ፔንትሃውስ",
+        "categoryLabel": "ምድብ",
+        "cityLabel": "ከተማ",
+        "neighborhoodLabel": "ሰፈር",
+        "neighborhoodPlaceholder": "ለምሳሌ፡ ቦሌ አትላስ",
+        "descriptionLabel": "መግለጫ",
+        "descriptionPlaceholder": "ዋይፋይ፣ ጀነሬተር፣ ጥበቃ፣ ቦታ ያጉላሉ…",
+        "beds": "መኝታዎች",
+        "baths": "መታጠቢያዎች",
+        "maxGuests": "ከፍተኛ እንግዶች"
+        },
+        "stayType": {
+        "description": "ይህ ንብረት የሚደግፋቸውን የቆይታ ዓይነቶች ይምረጡ።",
+        "short_term": "በሌሊት ኪራይ ከቀን ክልል ጋር።",
+        "long_term": "ወርሃዊ ኪራይ ከተፈረመ ስምምነት ጋር።",
+        "hybrid": "በሌሊትም ሆነ በወር — ቦታ ማስያዞችን ያሳድጉ።"
+        },
+        "pricing": {
+        "nightlyRate": "የሌሊት ዋጋ (ብር)",
+        "nightlyHelp": "እንግዶች በሌሊት የሚከፍሉት።",
+        "monthlyRate": "ወርሃዊ ዋጋ (ብር)",
+        "monthlyHelp": "ተከራዮች በወር የሚከፍሉት።",
+        "minLeaseMonths": "ዝቅተኛ የኪራይ ወራት",
+        "deposit": "የዋስትና ተቀማጭ (ብር)"
+        },
+        "photos": {
+        "title": "ፎቶዎች",
+        "description": "ቢያንስ አንድ ፎቶ ይስቀሉ። የመጀመሪያው ፎቶ ሽፋን ይሆናል።",
+        "dropHere": "ምስሎችን እዚህ ጣሉ ወይም ለመስቀል ይጫኑ",
+        "uploading": "በመስቀል ላይ…",
+        "limits": "እስከ {{max}} ምስሎች፣ አንድ ምስል {{mb}} MB",
+        "tooMany": "ከፍተኛው {{max}} ምስሎች ብቻ",
+        "tooBig": "{{name}} በጣም ትልቅ ነው",
+        "badType": "{{name}} የሚደገፍ የምስል ዓይነት አይደለም",
+        "uploadFailed": "መስቀል አልተሳካም",
+        "required": "ቢያንስ አንድ ፎቶ ያስፈልጋል"
+        },
+        "review": {
+        "description": "ከማሳወቅዎ በፊት ዝርዝርዎን ይገምግሙ።",
+        "images": "ምስሎች"
+        }
+    }
+    }
+}

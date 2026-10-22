@@ -1,0 +1,33 @@
+/**
+ * @file apps/web/app/globals.css
+ *
+ * App-level global styles.
+ *
+ * Why this file exists:
+ *   - Next.js requires a stylesheet in the app folder for its stylesheet
+ *     resolution and HMR pipeline.
+ *   - Holds utilities that don't belong in the design system (like the
+ *     screen-reader-only class that assistive tech depends on).
+ *   - The actual design system lives in `apps/web/styles/index.css` —
+ *     this file only contains app-specific helpers.
+ *
+ * This file is imported in `app/layout.jsx`.
+ */
+
+/**
+ * Screen-reader-only utility.
+ * Visually hidden but still announced by assistive technology.
+ * Used by Spinner, EmptyState, and any component that needs to
+ * display visual-only UI with a text fallback for screen readers.
+ */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}

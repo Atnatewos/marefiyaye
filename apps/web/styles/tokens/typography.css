@@ -1,0 +1,52 @@
+/**
+ * @file apps/web/styles/tokens/typography.css
+ *
+ * Typography tokens.
+ *
+ * Why this file exists:
+ *   - Font families, sizes, and line heights are referenced everywhere.
+ *   - A single source makes it easy to add a new scale or adjust the base size.
+ *   - Amharic text needs the Noto Sans Ethiopic fallback to render correctly.
+ *
+ * Values match the reference prototype's font setup.
+ */
+
+:root {
+  /* ─── FONT FAMILIES ────────────────────────────────────────────────── */
+  --font-sans:  'Plus Jakarta Sans', 'Noto Sans Ethiopic', system-ui, -apple-system, sans-serif;
+  --font-eth:   'Noto Sans Ethiopic', 'Plus Jakarta Sans', sans-serif;
+  --font-mono:  ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --font-serif: Georgia, 'Times New Roman', serif;
+
+  /* ─── FONT SIZES ───────────────────────────────────────────────────── */
+  --text-xs:   12px;
+  --text-sm:   13px;
+  --text-base: 15px;
+  --text-md:   16px;
+  --text-lg:   18px;
+  --text-xl:   20px;
+  --text-2xl:  24px;
+  --text-3xl:  30px;
+  --text-4xl:  36px;
+  --text-5xl:  48px;
+
+  /* ─── FONT WEIGHTS ─────────────────────────────────────────────────── */
+  --font-weight-normal:    400;
+  --font-weight-medium:    500;
+  --font-weight-semibold:  600;
+  --font-weight-bold:      700;
+  --font-weight-extrabold: 800;
+  --font-weight-black:     900;
+
+  /* ─── LINE HEIGHTS ─────────────────────────────────────────────────── */
+  --leading-tight:   1.2;
+  --leading-snug:    1.35;
+  --leading-normal:  1.5;
+  --leading-relaxed: 1.65;
+
+  /* ─── LETTER SPACING ───────────────────────────────────────────────── */
+  --tracking-tight:  -0.02em;
+  --tracking-normal: 0;
+  --tracking-wide:   0.04em;
+  --tracking-wider:  0.08em;
+}

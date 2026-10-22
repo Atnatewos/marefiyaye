@@ -1,0 +1,45 @@
+/**
+ * @file apps/web/styles/tokens/dark-theme.css
+ *
+ * Dark mode color overrides.
+ *
+ * Why this file exists:
+ *   - Dark mode should not require a second set of component styles.
+ *   - By overriding only the semantic tokens, every component that uses
+ *     `var(--surface)` or `var(--text-primary)` automatically adapts.
+ *   - Raw palette (`--color-brand-600`) stays the same so branded elements
+ *     keep their identity.
+ *
+ * Activation: set `data-theme="dark"` on the html element (via a cookie
+ * read in the root layout).
+ */
+
+[data-theme='dark'] {
+  /* ─── SURFACES ─────────────────────────────────────────────────────── */
+  --surface:        #111827;
+  --surface-muted:  #0b1220;
+  --surface-sunken: #1f2937;
+
+  /* ─── TEXT ─────────────────────────────────────────────────────────── */
+  --text-primary:   #f9fafb;
+  --text-secondary: #d1d5db;
+  --text-muted:     #6b7280;
+  --text-inverse:   #0f172a;
+
+  /* ─── BORDERS ──────────────────────────────────────────────────────── */
+  --border:        #1f2937;
+  --border-strong: #374151;
+
+  /* ─── STATUS ───────────────────────────────────────────────────────── */
+  --color-success-bg: #052e16;
+  --color-success-fg: #86efac;
+  --color-warning-bg: #3b2a08;
+  --color-warning-fg: #fde68a;
+  --color-danger-bg:  #450a0a;
+  --color-danger-fg:  #fca5a5;
+  --color-info-bg:    #172554;
+  --color-info-fg:    #93c5fd;
+
+  /* ─── SHADOWS ──────────────────────────────────────────────────────── */
+  --shadow-brand: 0 8px 24px rgba(0, 0, 0, 0.6);
+}

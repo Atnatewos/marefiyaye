@@ -1,0 +1,21 @@
+/**
+ * @file apps/web/styles/utilities/index.css
+ *
+ * Barrel import for all utility CSS files.
+ *
+ * Why this file exists:
+ *   - `styles/index.css` imports this single file instead of 9 separate ones.
+ *   - Order matters: layout first (foundational), then spacing, typography,
+ *     colors, effects, hover, animation, position, responsive (breakpoint-
+ *     specific overrides come last).
+ */
+
+@import './layout.css';
+@import './spacing.css';
+@import './typography.css';
+@import './colors.css';
+@import './effects.css';
+@import './hover.css';
+@import './animation.css';
+@import './position.css';
+@import './responsive.css';

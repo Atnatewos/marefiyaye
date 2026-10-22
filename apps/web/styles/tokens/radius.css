@@ -1,0 +1,21 @@
+/**
+ * @file apps/web/styles/tokens/radius.css
+ *
+ * Border radius tokens.
+ *
+ * Why this file exists:
+ *   - Cards, buttons, and inputs share a radius scale.
+ *   - Reference prototype uses `rounded-xl` (12px), `rounded-2xl` (16px),
+ *     and `rounded-3xl` (24px) for property cards — these tokens match.
+ */
+
+:root {
+  --radius-xs:   4px;
+  --radius-sm:   6px;
+  --radius-md:   10px;
+  --radius-lg:   14px;
+  --radius-xl:   18px;
+  --radius-2xl:  24px;
+  --radius-3xl:  32px;
+  --radius-full: 9999px;
+}

@@ -1,0 +1,72 @@
+/**
+ * @file apps/web/components/property/StayTypeToggle.module.css
+ *
+ * Stay type toggle (segmented control) styles.
+ *
+ * Why this file exists:
+ *   - Toggle switches between SHORT_TERM / LONG_TERM / ALL filter modes.
+ *   - Segmented control matches the reference prototype's header toggle.
+ */
+
+.container {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px;
+  background: var(--color-slate-100);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-inset);
+  gap: 2px;
+}
+
+.option {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-xl);
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-bold);
+  cursor: pointer;
+  transition: background var(--duration-fast), color var(--duration-fast), box-shadow var(--duration-fast);
+  white-space: nowrap;
+}
+
+.option:hover:not(.active) {
+  color: var(--text-primary);
+}
+
+.active {
+  background: var(--surface);
+  color: var(--color-brand-600);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ALL mode has no color emphasis — just white background */
+.activeNeutral {
+  background: var(--surface);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon > svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* ─── MOBILE ──────────────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .container {
+    display: none;
+  }
+}

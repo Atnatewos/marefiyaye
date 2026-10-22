@@ -1,0 +1,262 @@
+/**
+ * @file apps/web/components/property/PropertyCard.module.css
+ *
+ * Property card styles.
+ *
+ * Why this file exists:
+ *   - The property card is the most-seen UI element in the platform.
+ *   - Reference prototype shows: image with hover zoom, stay type badge,
+ *     wishlist heart, location + rating, title (line-clamped), property
+ *     details, price row.
+ */
+
+.card {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-2xl);
+  overflow: hidden;
+  transition: box-shadow var(--duration-normal), transform var(--duration-normal);
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+}
+
+.card:hover {
+  box-shadow: var(--shadow-xl);
+  transform: translateY(-2px);
+}
+
+/* ─── IMAGE ───────────────────────────────────────────────────────────── */
+
+.imageWrapper {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: var(--color-slate-100);
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--duration-slow);
+}
+
+.card:hover .image {
+  transform: scale(1.05);
+}
+
+/* ─── STAY TYPE BADGE ─────────────────────────────────────────────────── */
+
+.stayBadge {
+  position: absolute;
+  top: var(--space-3);
+  left: var(--space-3);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  background: rgba(15, 23, 42, 0.8);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: #ffffff;
+  padding: 4px var(--space-3);
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  font-size: 10px;
+  font-weight: var(--font-weight-extrabold);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wider);
+}
+
+.stayBadgeIcon {
+  width: 10px;
+  height: 10px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.stayBadgeIcon > svg {
+  width: 10px;
+  height: 10px;
+}
+
+.shortTermBadge {
+  color: #34d399;
+}
+
+.longTermBadge {
+  color: #fbbf24;
+}
+
+/* ─── WISHLIST HEART ──────────────────────────────────────────────────── */
+
+.heartButton {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: none;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background var(--duration-fast), color var(--duration-fast);
+  box-shadow: var(--shadow-md);
+}
+
+.heartButton:hover {
+  background: #ffffff;
+  color: var(--text-primary);
+}
+
+.heartButton.wishlisted {
+  background: #ffffff;
+  color: var(--color-danger);
+}
+
+.heartButton > svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* ─── BODY ────────────────────────────────────────────────────────────── */
+
+.body {
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  justify-content: space-between;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-muted);
+  margin-bottom: var(--space-1);
+  gap: var(--space-2);
+}
+
+.location {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.location > svg {
+  width: 12px;
+  height: 12px;
+  color: var(--color-brand-600);
+  flex-shrink: 0;
+}
+
+.locationText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--text-primary);
+  font-weight: var(--font-weight-bold);
+  flex-shrink: 0;
+}
+
+.rating > svg {
+  width: 12px;
+  height: 12px;
+  color: var(--color-brand-500);
+  fill: currentColor;
+}
+
+.title {
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+  line-height: var(--leading-snug);
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-bottom: var(--space-2);
+  transition: color var(--duration-fast);
+}
+
+.card:hover .title {
+  color: var(--color-brand-600);
+}
+
+.details {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  margin-bottom: var(--space-4);
+}
+
+/* ─── PRICE ROW ───────────────────────────────────────────────────────── */
+
+.priceRow {
+  margin-top: auto;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.prices {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nightlyPrice {
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-extrabold);
+  color: var(--text-primary);
+}
+
+.nightlyPriceUnit {
+  font-size: 10px;
+  font-weight: var(--font-weight-normal);
+  color: var(--text-muted);
+  margin-left: 2px;
+}
+
+.monthlyPrice {
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-brand-700);
+}
+
+.monthlyPriceUnit {
+  font-size: 10px;
+  font-weight: var(--font-weight-normal);
+  color: var(--text-muted);
+  margin-left: 2px;
+}
+
+.viewLink {
+  font-size: 11px;
+  font-weight: var(--font-weight-bold);
+  color: var(--text-secondary);
+  background: var(--color-slate-100);
+  padding: 4px 10px;
+  border-radius: var(--radius-lg);
+  white-space: nowrap;
+}

@@ -1,0 +1,106 @@
+/**
+ * @file apps/web/components/ui/Skeleton.module.css
+ *
+ * Skeleton loading placeholder styles.
+ *
+ * Why this file exists:
+ *   - Loading states need visual placeholders matching the shape of incoming
+ *     content — not a spinner. Skeletons feel faster.
+ *   - Shimmer animation (matching the reference) communicates "loading".
+ *   - Variants (text, card, table row) cover all loading contexts.
+ *
+ * All values reference Batch 1 tokens.
+ */
+
+/* ─── BASE SKELETON ───────────────────────────────────────────────────── */
+
+.skeleton {
+  display: block;
+  background: linear-gradient(
+    90deg,
+    var(--color-slate-100) 0%,
+    var(--color-slate-200) 50%,
+    var(--color-slate-100) 100%
+  );
+  background-size: 200% 100%;
+  border-radius: var(--radius-md);
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
+}
+
+/* ─── SHAPE VARIANTS ──────────────────────────────────────────────────── */
+
+.rounded { border-radius: var(--radius-md); }
+.roundedFull { border-radius: var(--radius-full); }
+.rounded2xl { border-radius: var(--radius-2xl); }
+
+.circle {
+  border-radius: var(--radius-full);
+  aspect-ratio: 1 / 1;
+}
+
+/* ─── TEXT SKELETON ───────────────────────────────────────────────────── */
+
+.textGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+}
+
+.textLine {
+  height: 12px;
+  border-radius: var(--radius-sm);
+}
+
+/* ─── CARD SKELETON ───────────────────────────────────────────────────── */
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-2xl);
+  overflow: hidden;
+}
+
+.cardImage {
+  aspect-ratio: 4 / 3;
+  width: 100%;
+}
+
+.cardBody {
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.cardTitle {
+  height: 16px;
+  width: 80%;
+  border-radius: var(--radius-sm);
+}
+
+.cardSubtitle {
+  height: 12px;
+  width: 60%;
+  border-radius: var(--radius-sm);
+}
+
+/* ─── TABLE ROW SKELETON ──────────────────────────────────────────────── */
+
+.tableRow {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr 1fr;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--border);
+}
+
+.tableCell {
+  height: 16px;
+  border-radius: var(--radius-sm);
+}

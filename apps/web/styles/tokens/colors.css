@@ -1,0 +1,68 @@
+/**
+ * @file apps/web/styles/tokens/colors.css
+ *
+ * Color tokens.
+ *
+ * Why this file exists:
+ *   - Every component references `var(--color-brand-600)` instead of `#b45309`.
+ *   - Changing the brand color is a one-line edit here.
+ *   - Semantic tokens (`--surface`, `--text-primary`) wrap raw palette values
+ *     so dark mode can override them without touching component CSS.
+ *
+ * Values match the reference prototype exactly:
+ *   - Brand amber #b45309, #d97706, #92400e, #451a03
+ *   - Slate #0f172a → #f8fafc
+ *   - Ethiopian green #009b48, yellow #fffe00, red #e52521
+ */
+
+:root {
+  /* ─── BRAND (amber) ────────────────────────────────────────────────── */
+  --color-brand-50:  #fffbf0;
+  --color-brand-100: #fef3c7;
+  --color-brand-500: #d97706;
+  --color-brand-600: #b45309;
+  --color-brand-700: #92400e;
+  --color-brand-900: #451a03;
+
+  /* ─── ETHIOPIA ACCENTS ─────────────────────────────────────────────── */
+  --color-eth-green:  #009b48;
+  --color-eth-yellow: #fffe00;
+  --color-eth-red:    #e52521;
+
+  /* ─── NEUTRALS (slate) ─────────────────────────────────────────────── */
+  --color-slate-50:  #f8fafc;
+  --color-slate-100: #f1f5f9;
+  --color-slate-200: #e2e8f0;
+  --color-slate-300: #cbd5e1;
+  --color-slate-400: #94a3b8;
+  --color-slate-500: #64748b;
+  --color-slate-600: #475569;
+  --color-slate-700: #334155;
+  --color-slate-800: #1e293b;
+  --color-slate-900: #0f172a;
+
+  /* ─── SEMANTIC (light mode defaults) ───────────────────────────────── */
+  --surface:         #ffffff;
+  --surface-muted:   var(--color-slate-50);
+  --surface-sunken:  var(--color-slate-100);
+  --text-primary:    var(--color-slate-900);
+  --text-secondary:  var(--color-slate-600);
+  --text-muted:      var(--color-slate-400);
+  --text-inverse:    #ffffff;
+  --border:          var(--color-slate-200);
+  --border-strong:   var(--color-slate-300);
+
+  /* ─── STATUS ───────────────────────────────────────────────────────── */
+  --color-success-bg:   #dcfce7;
+  --color-success-fg:   #166534;
+  --color-success:      #059669;
+  --color-warning-bg:   #fef3c7;
+  --color-warning-fg:   #92400e;
+  --color-warning:      #d97706;
+  --color-danger-bg:    #fee2e2;
+  --color-danger-fg:    #991b1b;
+  --color-danger:       #dc2626;
+  --color-info-bg:      #dbeafe;
+  --color-info-fg:      #1e40af;
+  --color-info:         #2563eb;
+}

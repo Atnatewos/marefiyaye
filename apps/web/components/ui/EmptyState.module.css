@@ -1,0 +1,59 @@
+/**
+ * @file apps/web/components/ui/EmptyState.module.css
+ *
+ * Empty state styles.
+ *
+ * Why this file exists:
+ *   - Empty states appear in: wishlist (no saved), search (no results),
+ *     bookings (no trips), admin (empty queue).
+ *   - Consistent layout with icon, title, description, and optional CTA.
+ *   - Uses reference prototype's empty wishlist pattern.
+ */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--space-12) var(--space-6);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-2xl);
+  max-width: 28rem;
+  margin: 0 auto;
+}
+
+.iconWrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-slate-300);
+  margin-bottom: var(--space-4);
+}
+
+.iconWrapper > svg {
+  width: 4rem;
+  height: 4rem;
+}
+
+.title {
+  font-size: var(--text-lg);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+  margin-bottom: var(--space-2);
+}
+
+.description {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  line-height: var(--leading-relaxed);
+  margin-bottom: var(--space-6);
+}
+
+.action {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  justify-content: center;
+}

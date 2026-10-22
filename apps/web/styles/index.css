@@ -1,0 +1,21 @@
+/**
+ * @file apps/web/styles/index.css
+ *
+ * Global styles entry point.
+ *
+ * Why this file exists:
+ *   - Next.js needs one CSS import in `app/layout.jsx` to load the whole
+ *     design system. This file composes the cascade in the right order:
+ *       1. reset.css       — normalize browser defaults
+ *       2. tokens/         — design variables (used by everything below)
+ *       3. utilities/      — utility classes (used by JSX className strings)
+ *       4. print.css       — print-only overrides (safe anywhere)
+ *
+ * Component-specific `.module.css` files are NOT imported here — they load
+ * automatically when their component renders.
+ */
+
+@import './reset.css';
+@import './tokens/index.css';
+@import './utilities/index.css';
+@import './print.css';
