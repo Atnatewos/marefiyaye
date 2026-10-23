@@ -5,8 +5,11 @@
  *
  * Why this file exists:
  *   - Guests land here from the feed to see the full listing.
- *   - Shows gallery, host, amenities, pricing, and the correct booking widget
- *     based on the property's stay type.
+ *   - Shows gallery, host, amenities, reviews, pricing, and the correct
+ *     booking widget based on the property's stay type:
+ *       SHORT_TERM → <BookingWidget />
+ *       LONG_TERM  → <LeaseActions />
+ *       HYBRID     → both
  *
  * i18n: every visible string flows through `t()`.
  */
@@ -20,6 +23,7 @@ import { Button, Spinner, Badge, EmptyState, useToast } from '@/components/ui';
 import { Navbar, Footer, Breadcrumbs } from '@/components/layout';
 import { BookingWidget } from '@/components/booking/BookingWidget';
 import { LeaseActions } from '@/components/lease/LeaseActions';
+import { ReviewsSection } from '@/components/property/ReviewsSection';
 
 import { useCurrency } from '@/context/CurrencyContext';
 import { useWishlist } from '@/context/WishlistContext';
@@ -229,6 +233,13 @@ export default function PropertyDetailPage() {
                 </div>
               </section>
             )}
+
+            {/* Reviews — read-only display of guest reviews */}
+            <ReviewsSection
+              propertyId={property.id}
+              ratingAvg={property.ratingAvg}
+              reviewCount={property.reviewCount}
+            />
 
             {isLongTerm && (
               <section style={{ background: 'var(--color-slate-900)', color: '#fff', padding: 'var(--space-6)', borderRadius: 'var(--radius-2xl)', marginBottom: 'var(--space-8)' }}>

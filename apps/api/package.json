@@ -5,10 +5,10 @@
   "type": "module",
   "main": "src/server.js",
   "scripts": {
-    "dev": "node --watch src/server.js",
-    "start": "node src/server.js",
+    "dev":     "nodemon src/server.js",
+    "start":   "node src/server.js",
     "migrate": "node src/db/migrations/run.js",
-    "seed": "node src/db/seeds/seed.js"
+    "seed":    "node src/db/seeds/seed.js"
   },
   "dependencies": {
     "@marefiyaye/shared": "*",
@@ -25,7 +25,6 @@
     "pg": "8.12.0",
     "pino": "9.3.2",
     "pino-http": "10.2.0",
-    "pino-pretty": "^10.3.1",
     "qrcode": "1.5.4",
     "slugify": "1.6.6",
     "zod": "3.23.8"

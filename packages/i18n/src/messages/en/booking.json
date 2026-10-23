@@ -43,19 +43,21 @@
   },
   "listing": {
     "wizard": {
-        "title": "Create a Listing",
-        "description": "Add a property in 5 simple steps.",
-        "submit": "Publish Listing",
-        "success": "Listing published successfully!",
-        "failed": "Failed to publish listing",
-        "steps": {
+      "title": "Create a Listing",
+      "description": "Add a property in 7 simple steps.",
+      "submit": "Publish Listing",
+      "success": "Listing published successfully!",
+      "failed": "Failed to publish listing",
+      "steps": {
         "basics": "Basics",
         "stayType": "Stay Type",
         "pricing": "Pricing",
+        "amenities": "Amenities",
+        "utilities": "Utilities",
         "photos": "Photos",
         "review": "Review"
-        },
-        "basics": {
+      },
+      "basics": {
         "titleLabel": "Property Title",
         "titlePlaceholder": "e.g. Modern Penthouse in Bole",
         "titleAmLabel": "Title (Amharic)",
@@ -69,22 +71,28 @@
         "beds": "Beds",
         "baths": "Baths",
         "maxGuests": "Max Guests"
-        },
-        "stayType": {
+      },
+      "stayType": {
         "description": "Choose what kind of stays this property supports.",
         "short_term": "Nightly bookings with date range.",
         "long_term": "Monthly leases with signed agreements.",
         "hybrid": "Both nightly and monthly — maximize bookings."
-        },
-        "pricing": {
+      },
+      "pricing": {
         "nightlyRate": "Nightly Rate (ETB)",
         "nightlyHelp": "What guests pay per night.",
         "monthlyRate": "Monthly Rate (ETB)",
         "monthlyHelp": "What tenants pay per month.",
         "minLeaseMonths": "Minimum Lease (months)",
         "deposit": "Security Deposit (ETB)"
-        },
-        "photos": {
+      },
+      "amenities": {
+        "description": "Select all amenities this property offers."
+      },
+      "utilities": {
+        "description": "Check the utilities included in the monthly rent."
+      },
+      "photos": {
         "title": "Photos",
         "description": "Upload at least one photo. First photo is the cover.",
         "dropHere": "Drop images here or click to upload",
@@ -95,11 +103,11 @@
         "badType": "{{name}} is not a supported image type",
         "uploadFailed": "Upload failed",
         "required": "At least one photo is required"
-        },
-        "review": {
+      },
+      "review": {
         "description": "Review your listing before publishing.",
         "images": "images"
-        }
+      }
     }
-}
+  }
 }

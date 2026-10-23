@@ -46,5 +46,34 @@
     "verifyError": "ማረጋገጥ አልተቻለም",
     "rejectError": "መመለስ አልተቻለም",
     "reasonRequired": "የመመለሻ ምክንያት ያስገቡ (ቢያንስ 3 ፊደላት)"
+  },
+  "listings": {
+    "title": "የዝርዝር ማረጋገጫ",
+    "description": "አዲስ የንብረት ዝርዝሮችን ከመታወቃቸው በፊት ይገምግሙ እና ያጽድቁ።",
+    "loadError": "ዝርዝሮችን መጫን አልተቻለም",
+    "notFound": "ዝርዝሩ አልተገኘም",
+    "verifyButton": "አረጋግጥ እና አሳውቅ",
+    "rejectButton": "እምቢ በል",
+    "confirmReject": "ውድቅን አረጋግጥ",
+    "verifySuccess": "ዝርዝሩ ተረጋግጦ ታውቋል!",
+    "rejectSuccess": "ዝርዝሩ ተመልሷል",
+    "verifyError": "ማረጋገጥ አልተቻለም",
+    "rejectError": "መመለስ አልተቻለም",
+    "reasonRequired": "የመመለሻ ምክንያት ያስገቡ (ቢያንስ 3 ፊደላት)",
+    "reasonLabel": "የመመለሻ ምክንያት",
+    "reasonPlaceholder": "ለምሳሌ፡ ፎቶዎች ወይም መረጃ ያልተሟሉ",
+    "byHost": "በ{{name}}",
+    "pricing": "ዋጋ",
+    "host": "አስተናጋጅ",
+    "actions": "ተግባራት",
+    "tabs": {
+      "pending": "በመጠባበቅ ላይ",
+      "verified": "ተረጋግጧል",
+      "all": "ሁሉም"
+    },
+    "empty": {
+      "title": "የሚገመገም ዝርዝር የለም",
+      "description": "{{status}} ዝርዝሮች የሉም።"
+    }
   }
 }

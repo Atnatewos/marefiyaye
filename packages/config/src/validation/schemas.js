@@ -187,3 +187,9 @@ export { applyForLeaseSchema, scheduleViewingSchema, approveLeaseSchema } from '
 
 // Listing schemas
 export { createListingSchema } from './listingSchemas.js';
+
+// Admin listing schemas
+export { verifyListingSchema, rejectListingSchema } from './adminListingSchemas.js';
+
+// Review schemas
+export { submitReviewSchema } from './reviewSchemas.js';

@@ -23,7 +23,7 @@
     "referenceHelp": "በባንክ SMS ደረሰኝዎ ውስጥ ይገኛል",
     "receiptLabel": "የደረሰኝ ሊንክ (አማራጭ)",
     "receiptPlaceholder": "https://...",
-    "receiptHelp": "የደረሰኝ ምስል ሊንክ ይለጥፉ። የምስል መጫኛ በሚቀጥለው ይመጣል።",
+    "receiptHelp": "የደረሰኝ ምስል ሊንክ ይለጥፉ።",
     "notice": "አስተዳዳሪው በ24 ሰዓት ውስጥ ያረጋግጣል። ሁኔታውን በጉዞዎቼ ያዩ።",
     "submit": "ክፍያ አስገባ",
     "cancel": "ሰርዝ",
@@ -43,19 +43,21 @@
   },
   "listing": {
     "wizard": {
-        "title": "ንብረት ይፍጠሩ",
-        "description": "በ5 ቀላል ደረጃዎች ንብረትዎን ያክሉ።",
-        "submit": "ንብረቱን አሳውቅ",
-        "success": "ንብረቱ በተሳካ ሁኔታ ታውቋል!",
-        "failed": "ንብረቱን ማሳወቅ አልተቻለም",
-        "steps": {
+      "title": "ንብረት ይፍጠሩ",
+      "description": "በ7 ቀላል ደረጃዎች ንብረትዎን ያክሉ።",
+      "submit": "ንብረቱን አሳውቅ",
+      "success": "ንብረቱ በተሳካ ሁኔታ ታውቋል!",
+      "failed": "ንብረቱን ማሳወቅ አልተቻለም",
+      "steps": {
         "basics": "መሠረታዊ",
         "stayType": "የቆይታ ዓይነት",
         "pricing": "ዋጋ",
+        "amenities": "መገልገያዎች",
+        "utilities": "አገልግሎቶች",
         "photos": "ፎቶዎች",
         "review": "ግምገማ"
-        },
-        "basics": {
+      },
+      "basics": {
         "titleLabel": "የንብረት ርዕስ",
         "titlePlaceholder": "ለምሳሌ፡ በቦሌ የሚገኝ ዘመናዊ ፔንትሃውስ",
         "titleAmLabel": "ርዕስ (አማርኛ)",
@@ -69,22 +71,28 @@
         "beds": "መኝታዎች",
         "baths": "መታጠቢያዎች",
         "maxGuests": "ከፍተኛ እንግዶች"
-        },
-        "stayType": {
+      },
+      "stayType": {
         "description": "ይህ ንብረት የሚደግፋቸውን የቆይታ ዓይነቶች ይምረጡ።",
         "short_term": "በሌሊት ኪራይ ከቀን ክልል ጋር።",
         "long_term": "ወርሃዊ ኪራይ ከተፈረመ ስምምነት ጋር።",
         "hybrid": "በሌሊትም ሆነ በወር — ቦታ ማስያዞችን ያሳድጉ።"
-        },
-        "pricing": {
+      },
+      "pricing": {
         "nightlyRate": "የሌሊት ዋጋ (ብር)",
         "nightlyHelp": "እንግዶች በሌሊት የሚከፍሉት።",
         "monthlyRate": "ወርሃዊ ዋጋ (ብር)",
         "monthlyHelp": "ተከራዮች በወር የሚከፍሉት።",
         "minLeaseMonths": "ዝቅተኛ የኪራይ ወራት",
         "deposit": "የዋስትና ተቀማጭ (ብር)"
-        },
-        "photos": {
+      },
+      "amenities": {
+        "description": "ይህ ንብረት የሚያቀርባቸውን ሁሉንም መገልገያዎች ይምረጡ።"
+      },
+      "utilities": {
+        "description": "በወርሃዊ ኪራይ ውስጥ የተካተቱትን አገልግሎቶች ይምረጡ።"
+      },
+      "photos": {
         "title": "ፎቶዎች",
         "description": "ቢያንስ አንድ ፎቶ ይስቀሉ። የመጀመሪያው ፎቶ ሽፋን ይሆናል።",
         "dropHere": "ምስሎችን እዚህ ጣሉ ወይም ለመስቀል ይጫኑ",
@@ -95,11 +103,11 @@
         "badType": "{{name}} የሚደገፍ የምስል ዓይነት አይደለም",
         "uploadFailed": "መስቀል አልተሳካም",
         "required": "ቢያንስ አንድ ፎቶ ያስፈልጋል"
-        },
-        "review": {
+      },
+      "review": {
         "description": "ከማሳወቅዎ በፊት ዝርዝርዎን ይገምግሙ።",
         "images": "ምስሎች"
-        }
+      }
     }
-    }
+  }
 }

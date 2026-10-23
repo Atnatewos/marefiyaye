@@ -8,7 +8,8 @@
  *   - pino emits JSON that Vercel and log aggregators index automatically.
  *   - Secrets (JWT, DB URL, receipt URLs) are redacted by path so they never
  *     appear in log output.
- *   - A single shared instance keeps log level and pretty-printing consistent.
+ *   - In development, we pretty-print regardless of TTY — so `npm run dev`
+ *     (which pipes through concurrently) still produces readable logs.
  *
  * Contract: every module imports `logger` from this file — never console.log.
  */
@@ -17,10 +18,11 @@ import pino from 'pino';
 import { apiEnv } from '../config/env.js';
 
 /**
- * True when the process is running under `node --watch` or nodemon.
- * `process.stdout.isTTY` is true in local terminals and false on Vercel.
+ * True when running in development.
+ * Pretty-printing is enabled whenever NODE_ENV !== 'production', even if
+ * stdout is piped (which is the case under `concurrently`).
  */
-const isDevTTY = Boolean(process.stdout.isTTY) && apiEnv.NODE_ENV !== 'production';
+const usePrettyTransport = apiEnv.NODE_ENV !== 'production';
 
 /**
  * Paths that must never appear in logs. pino walks these exact key paths and
@@ -49,9 +51,9 @@ const REDACT_PATHS = [
 /**
  * The shared pino instance.
  *
- * In development: pretty-printed single-line output for readable terminal logs.
- * In production: JSON lines (default), which Vercel indexes by `level`, `time`,
- * `msg`, and any structured field.
+ * In development: pretty-printed single-line output (even under concurrently).
+ * In production: JSON lines — Vercel indexes by `level`, `time`, `msg`, and
+ * any structured field.
  */
 export const logger = pino({
   level: apiEnv.LOG_LEVEL,
@@ -67,7 +69,7 @@ export const logger = pino({
   formatters: {
     level: (label) => ({ level: label }),
   },
-  transport: isDevTTY
+  transport: usePrettyTransport
     ? {
         target: 'pino-pretty',
         options: {

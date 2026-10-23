@@ -2,6 +2,8 @@
  * @file apps/web/components/dashboard/ListingWizard/useWizard.js
  *
  * Listing wizard state hook.
+ *
+ * Seven steps: basics → stayType → pricing → amenities → utilities → photos → review.
  */
 
 'use client';
@@ -12,6 +14,8 @@ export const WIZARD_STEPS = [
   { key: 'basics', titleKey: 'listing.wizard.steps.basics' },
   { key: 'stayType', titleKey: 'listing.wizard.steps.stayType' },
   { key: 'pricing', titleKey: 'listing.wizard.steps.pricing' },
+  { key: 'amenities', titleKey: 'listing.wizard.steps.amenities' },
+  { key: 'utilities', titleKey: 'listing.wizard.steps.utilities' },
   { key: 'photos', titleKey: 'listing.wizard.steps.photos' },
   { key: 'review', titleKey: 'listing.wizard.steps.review' },
 ];

@@ -16,6 +16,8 @@ import { WizardShell } from '@/components/dashboard/ListingWizard/WizardShell';
 import { StepBasics } from '@/components/dashboard/ListingWizard/StepBasics';
 import { StepStayType } from '@/components/dashboard/ListingWizard/StepStayType';
 import { StepPricing } from '@/components/dashboard/ListingWizard/StepPricing';
+import { StepAmenities } from '@/components/dashboard/ListingWizard/StepAmenities';
+import { StepUtilities } from '@/components/dashboard/ListingWizard/StepUtilities';
 import { StepPhotos } from '@/components/dashboard/ListingWizard/StepPhotos';
 import { StepReview } from '@/components/dashboard/ListingWizard/StepReview';
 import { ROUTES } from '@marefiyaye/config/app';
@@ -59,6 +61,8 @@ export default function NewListingPage() {
         {stepKey === 'basics' && <StepBasics {...stepProps} />}
         {stepKey === 'stayType' && <StepStayType {...stepProps} />}
         {stepKey === 'pricing' && <StepPricing {...stepProps} />}
+        {stepKey === 'amenities' && <StepAmenities {...stepProps} />}
+        {stepKey === 'utilities' && <StepUtilities {...stepProps} />}
         {stepKey === 'photos' && <StepPhotos {...stepProps} />}
         {stepKey === 'review' && <StepReview {...stepProps} />}
       </WizardShell>

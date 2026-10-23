@@ -10,7 +10,9 @@ import bookingsRoutes from './bookings.routes.js';
 import leasesRoutes from './leases.routes.js';
 import hostRoutes from './host.routes.js';
 import adminRoutes from './admin.routes.js';
+import adminListingsRoutes from './admin-listings.routes.js';
 import uploadsRoutes from './uploads.routes.js';
+import reviewsRoutes from './reviews.routes.js';
 
 const router = Router();
 
@@ -30,6 +32,9 @@ router.use('/bookings', bookingsRoutes);
 router.use('/leases', leasesRoutes);
 router.use('/host', hostRoutes);
 router.use('/admin', adminRoutes);
+router.use('/admin/listings', adminListingsRoutes);
 router.use('/uploads', uploadsRoutes);
+router.use('/reviews', reviewsRoutes);
+
 
 export default router;

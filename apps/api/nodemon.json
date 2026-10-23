@@ -1,0 +1,9 @@
+{
+  "watch": ["src"],
+  "ignore": ["src/db/migrations/**", "src/db/seeds/**"],
+  "ext": "js,json",
+  "delay": "300",
+  "quiet": true,
+  "verbose": false,
+  "restartable": "rs"
+}

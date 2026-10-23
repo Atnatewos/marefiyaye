@@ -46,5 +46,34 @@
     "verifyError": "Verification failed",
     "rejectError": "Rejection failed",
     "reasonRequired": "Enter a rejection reason (min 3 characters)"
+  },
+  "listings": {
+    "title": "Listing Verification",
+    "description": "Review and approve new property listings before they go live.",
+    "loadError": "Failed to load listings",
+    "notFound": "Listing not found",
+    "verifyButton": "Verify & Publish",
+    "rejectButton": "Reject",
+    "confirmReject": "Confirm Rejection",
+    "verifySuccess": "Listing verified and published!",
+    "rejectSuccess": "Listing rejected",
+    "verifyError": "Verification failed",
+    "rejectError": "Rejection failed",
+    "reasonRequired": "Enter a rejection reason (min 3 characters)",
+    "reasonLabel": "Rejection reason",
+    "reasonPlaceholder": "e.g. Missing photos or incomplete info",
+    "byHost": "by {{name}}",
+    "pricing": "Pricing",
+    "host": "Host",
+    "actions": "Actions",
+    "tabs": {
+      "pending": "Pending",
+      "verified": "Verified",
+      "all": "All"
+    },
+    "empty": {
+      "title": "No listings to review",
+      "description": "There are no {{status}} listings."
+    }
   }
 }

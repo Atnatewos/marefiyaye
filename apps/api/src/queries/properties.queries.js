@@ -40,7 +40,9 @@ const LISTING_COLUMNS = `
  * @returns {{ where: string, params: unknown[] }}
  */
 function buildFilters(filters) {
-  const conditions = ['p.is_active = TRUE'];
+  // Public feed shows ONLY verified listings. Hosts see their own
+  // unverified listings via /api/host/listings (which doesn't use this function).
+  const conditions = ['p.is_active = TRUE', 'p.is_verified = TRUE'];
   const params = [];
 
   if (filters.stayType && filters.stayType !== 'ALL') {
