@@ -63,7 +63,10 @@
     "reasonLabel": "የመመለሻ ምክንያት",
     "reasonPlaceholder": "ለምሳሌ፡ ፎቶዎች ወይም መረጃ ያልተሟሉ",
     "byHost": "በ{{name}}",
-    "pricing": "ዋጋ",
+    "pricing": {
+      "nightlyRate": "የሌሊት ዋጋ",
+      "monthlyRate": "ወርሃዊ ዋጋ"
+    },
     "host": "አስተናጋጅ",
     "actions": "ተግባራት",
     "tabs": {

@@ -161,8 +161,8 @@ export default function AdminListingDetailPage() {
             <h3 style={{ fontSize: 'var(--text-sm)', fontWeight: 'var(--font-weight-bold)', marginBottom: 'var(--space-3)' }}>
               {t('admin.listings.pricing')}
             </h3>
-            {listing.nightlyRateEtb && <Row label={t('listing.wizard.pricing.nightlyRate')} value={format(listing.nightlyRateEtb)} />}
-            {listing.monthlyRateEtb && <Row label={t('listing.wizard.pricing.monthlyRate')} value={format(listing.monthlyRateEtb)} />}
+            {listing.nightlyRateEtb && <Row label={t('admin.listings.pricing.nightlyRate')} value={format(listing.nightlyRateEtb)} />}
+            {listing.monthlyRateEtb && <Row label={t('admin.listings.pricing.monthlyRate')} value={format(listing.monthlyRateEtb)} />}
             <Row label={t('property.specs.beds')} value={listing.beds} />
             <Row label={t('property.specs.baths')} value={listing.baths} />
             <Row label={t('property.specs.guests')} value={listing.maxGuests} />

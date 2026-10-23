@@ -6,17 +6,23 @@
  * Why this file exists:
  *   - Components need to know: is a user logged in? what role?
  *   - Login/logout actions update the whole tree without prop-drilling.
- *   - The current user is fetched ONCE on mount and cached in context.
- *   - Admin session is tracked separately from guest session so a guest
- *     cannot accidentally be treated as admin.
+ *   - Fetch runs ONCE per app mount. Under Fast Refresh, provider state
+ *     is preserved so multiple fetches do not hammer the API.
  *
- * Usage:
- *   const { user, admin, isAuthenticated, isAdmin, login, logout, adminLogin, adminLogout } = useAuth();
+ * Contract: exports `useAuth()` hook consumed everywhere.
  */
 
 'use client';
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {
   fetchMe,
   fetchAdminMe,
@@ -28,31 +34,57 @@ import {
 
 const AuthContext = createContext(null);
 
+/**
+ * Small delay used to retry after a 429 rate-limit response.
+ */
+const RATE_LIMIT_RETRY_MS = 2000;
+
+/**
+ * Fetches a user (guest or admin), retrying once on rate limit.
+ * Returns `null` when the token is missing/expired.
+ */
+async function fetchWithRetry(fetchFn) {
+  try {
+    return await fetchFn();
+  } catch (error) {
+    if (error?.status === 429) {
+      await new Promise((r) => setTimeout(r, RATE_LIMIT_RETRY_MS));
+      try {
+        return await fetchFn();
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  }
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [admin, setAdmin] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const mountedRef = useRef(false);
+
   const fetchUser = useCallback(async () => {
-    try {
-      const me = await fetchMe();
-      setUser(me);
-    } catch {
-      setUser(null);
-    }
+    const me = await fetchWithRetry(fetchMe);
+    setUser(me);
   }, []);
 
   const fetchAdmin = useCallback(async () => {
-    try {
-      const me = await fetchAdminMe();
-      setAdmin(me);
-    } catch {
-      setAdmin(null);
-    }
+    const me = await fetchWithRetry(fetchAdminMe);
+    setAdmin(me);
   }, []);
 
   useEffect(() => {
+    if (mountedRef.current) return undefined;
+    mountedRef.current = true;
+
     Promise.all([fetchUser(), fetchAdmin()]).finally(() => setIsLoading(false));
+
+    return () => {
+      mountedRef.current = false;
+    };
   }, [fetchUser, fetchAdmin]);
 
   const login = useCallback(async (credentials) => {
@@ -90,7 +122,9 @@ export function AuthProvider({ children }) {
       logout,
       adminLogin,
       adminLogout,
-      refresh: async () => { await Promise.all([fetchUser(), fetchAdmin()]); },
+      refresh: async () => {
+        await Promise.all([fetchUser(), fetchAdmin()]);
+      },
     }),
     [user, admin, isLoading, login, logout, adminLogin, adminLogout, fetchUser, fetchAdmin]
   );

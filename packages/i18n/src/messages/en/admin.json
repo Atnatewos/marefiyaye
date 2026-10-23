@@ -63,7 +63,10 @@
     "reasonLabel": "Rejection reason",
     "reasonPlaceholder": "e.g. Missing photos or incomplete info",
     "byHost": "by {{name}}",
-    "pricing": "Pricing",
+    "pricing": {
+      "nightlyRate": "Nightly Rate",
+      "monthlyRate": "Monthly Rate"
+    },
     "host": "Host",
     "actions": "Actions",
     "tabs": {
