@@ -32,5 +32,13 @@ const app = createApp();
  * @param {import('http').ServerResponse} res
  */
 export default function handler(req, res) {
+  // Vercel's routing can sometimes strip the /api prefix depending on 
+  // how the rewrites are configured or if zero-config is used. 
+  // Express expects /api to be present because of `app.use('/api', routes)` in app.js.
+  // This ensures the URL is always correctly formatted for Express routing.
+  if (!req.url.startsWith('/api')) {
+    req.url = `/api${req.url}`;
+  }
+  
   return app(req, res);
 }
