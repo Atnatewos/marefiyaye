@@ -2,8 +2,13 @@
  * @file apps/web/app/admin/payments/page.jsx
  *
  * Admin payment verification queue.
+ */
+
+/**
+ * @file apps/web/app/admin/payments/page.jsx
  *
- * i18n: every visible string flows through `t()`.
+ * Admin payment verification queue.
+ * i18n: keys prefixed with `admin.payments.*`.
  */
 
 'use client';

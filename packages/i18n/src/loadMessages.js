@@ -1,121 +1,58 @@
 /**
  * @file packages/i18n/src/loadMessages.js
  *
- * Message dictionary loader.
+ * Translation tree loader.
  *
  * Why this file exists:
- *   - The I18nProvider needs a single flat dictionary per locale.
- *   - Namespaced JSON files (`booking.json`, `payment.json`, ...) keep the
- *     source organized; the loader flattens them into `booking.cta.submit`
- *     style keys.
- *   - Static `import` is used (not `require`) so Next.js webpack can
- *     tree-shake, and both server and client can import this module.
+ *   - Replaces the previous flatten-based loader with a simple tree getter.
+ *   - Each locale's `messages/<code>/index.js` barrel already merges every
+ *     namespace into a single nested object. This module just picks the
+ *     right tree based on the locale code.
  *
- * Contract: `loadMessages(locale)` returns a flat object with all namespaces
- * merged. Missing namespaces resolve to `{}` (never throw) so a partial
- * translation never breaks the app.
+ * Design decisions:
+ *   - NO flattening. The tree stays nested. The `t()` function (in `t.js`)
+ *     walks the tree on each lookup — cheap because Node/V8 handles nested
+ *     property access natively.
+ *   - NO namespace prefixing logic. Each namespace file wraps its own content
+ *     in a top-level key equal to the file name (e.g. `admin.js` exports
+ *     `{ admin: { ... } }`). This makes the tree identical to the intent.
+ *   - Unknown locales fall back to DEFAULT_LOCALE, never throw.
+ *
+ * Contract: `getTranslations(code)` returns the nested tree for that locale.
+ * `getFallbackTranslations()` returns the English tree.
  */
 
-import { DEFAULT_LOCALE, isSupportedLocale, MESSAGE_NAMESPACES } from './config.js';
-
-// ── Static imports of every namespace per locale ──────────────────────────
-// These must be literal strings (not template literals) so webpack bundles
-// them correctly.
-
-// English
-import enCommon from './messages/en/common.json' assert { type: 'json' };
-import enAuth from './messages/en/auth.json' assert { type: 'json' };
-import enProperty from './messages/en/property.json' assert { type: 'json' };
-import enBooking from './messages/en/booking.json' assert { type: 'json' };
-import enPayment from './messages/en/payment.json' assert { type: 'json' };
-import enLease from './messages/en/lease.json' assert { type: 'json' };
-import enDashboard from './messages/en/dashboard.json' assert { type: 'json' };
-import enAdmin from './messages/en/admin.json' assert { type: 'json' };
-import enValidation from './messages/en/validation.json' assert { type: 'json' };
-
-// Amharic
-import amCommon from './messages/am/common.json' assert { type: 'json' };
-import amAuth from './messages/am/auth.json' assert { type: 'json' };
-import amProperty from './messages/am/property.json' assert { type: 'json' };
-import amBooking from './messages/am/booking.json' assert { type: 'json' };
-import amPayment from './messages/am/payment.json' assert { type: 'json' };
-import amLease from './messages/am/lease.json' assert { type: 'json' };
-import amDashboard from './messages/am/dashboard.json' assert { type: 'json' };
-import amAdmin from './messages/am/admin.json' assert { type: 'json' };
-import amValidation from './messages/am/validation.json' assert { type: 'json' };
+import { DEFAULT_LOCALE, isSupportedLocale } from './config.js';
+import enMessages from './messages/en/index.js';
+import amMessages from './messages/am/index.js';
 
 /**
- * Per-locale namespace map. Keys match MESSAGE_NAMESPACES.
+ * Per-locale tree map. Every namespace is already merged into its locale's
+ * barrel (`messages/<code>/index.js`), so this map is just a two-key dispatch.
  */
-const MESSAGES = {
-  en: {
-    common: enCommon,
-    auth: enAuth,
-    property: enProperty,
-    booking: enBooking,
-    payment: enPayment,
-    lease: enLease,
-    dashboard: enDashboard,
-    admin: enAdmin,
-    validation: enValidation,
-  },
-  am: {
-    common: amCommon,
-    auth: amAuth,
-    property: amProperty,
-    booking: amBooking,
-    payment: amPayment,
-    lease: amLease,
-    dashboard: amDashboard,
-    admin: amAdmin,
-    validation: amValidation,
-  },
+const TRANSLATIONS = {
+  en: enMessages,
+  am: amMessages,
 };
 
 /**
- * Flattens a nested object into dot-notation keys.
- * Arrays are kept intact (they are terminal values, not traversable).
- *
- * @param {object} source
- * @param {string} [prefix='']
- * @returns {Record<string, unknown>}
- */
-function flatten(source, prefix = '') {
-  const flat = {};
-  for (const [key, value] of Object.entries(source)) {
-    const path = prefix ? `${prefix}.${key}` : key;
-    if (value && typeof value === 'object' && !Array.isArray(value)) {
-      Object.assign(flat, flatten(value, path));
-    } else {
-      flat[path] = value;
-    }
-  }
-  return flat;
-}
-
-/**
- * Returns a flat dictionary for the given locale.
- * Falls back to DEFAULT_LOCALE when the code is unknown.
+ * Returns the nested translations tree for the given locale.
+ * Falls back to the default locale if the code is unknown.
  *
  * @param {string} localeCode
- * @returns {Record<string, string | string[]>}
+ * @returns {object}
  */
-export function loadMessages(localeCode) {
+export function getTranslations(localeCode) {
   const code = isSupportedLocale(localeCode) ? localeCode : DEFAULT_LOCALE;
-  const namespaces = MESSAGES[code] || {};
-
-  const merged = {};
-  for (const ns of MESSAGE_NAMESPACES) {
-    const tree = namespaces[ns] || {};
-    Object.assign(merged, flatten(tree, ns));
-  }
-  return merged;
+  return TRANSLATIONS[code] || {};
 }
 
 /**
- * Returns a flat dictionary of the fallback locale (English).
- * Used by I18nProvider when a key is missing from the current locale.
+ * Returns the fallback (English) translations tree.
+ * Used by `createT` when a key is missing in the current locale.
+ *
+ * @returns {object}
  */
-export function loadFallbackMessages() {
-  return loadMessages(DEFAULT_LOCALE);
+export function getFallbackTranslations() {
+  return getTranslations(DEFAULT_LOCALE);
 }

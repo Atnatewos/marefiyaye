@@ -6,10 +6,6 @@
  * Why this file exists:
  *   - Centralizes all property API calls in one place.
  *   - Components call `fetchProperties()` — they never build URLs directly.
- *
- * Usage:
- *   const { items, pagination } = await fetchProperties({ stayType: 'SHORT_TERM' });
- *   const { property } = await fetchPropertyBySlug('bole-penthouse-...');
  */
 
 import { apiClient } from './apiClient';
@@ -48,4 +44,16 @@ export async function fetchPropertyBySlug(slug) {
 export async function fetchCities() {
   const { cities } = await apiClient.get('/api/properties/cities');
   return cities;
+}
+
+/**
+ * Updates a listing. Only the owning host can update.
+ *
+ * @param {string} propertyId
+ * @param {object} patch - Partial fields (title, description, rates, etc.)
+ * @returns {Promise<object>} Updated property
+ */
+export async function updateProperty(propertyId, patch) {
+  const { property } = await apiClient.patch(`/api/properties/${propertyId}`, patch);
+  return property;
 }

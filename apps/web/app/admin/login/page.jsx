@@ -11,6 +11,13 @@
  * i18n: every visible string flows through `t()`.
  */
 
+/**
+ * @file apps/web/app/admin/login/page.jsx
+ *
+ * Admin login.
+ * i18n: keys prefixed with `auth.admin.*`.
+ */
+
 'use client';
 
 import { useState } from 'react';
@@ -92,10 +99,6 @@ export default function AdminLoginPage() {
             {t('auth.admin.submit')}
           </Button>
         </form>
-
-        <p style={{ marginTop: 'var(--space-4)', fontSize: 'var(--text-xs)', color: 'var(--text-muted)', textAlign: 'center' }}>
-          {t('auth.admin.demoHint')}
-        </p>
       </div>
     </div>
   );

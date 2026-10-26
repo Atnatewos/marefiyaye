@@ -2,18 +2,20 @@
  * @file apps/web/app/admin/properties/[id]/page.jsx
  *
  * Admin review page for one listing.
+ */
+
+/**
+ * @file apps/web/app/admin/properties/[id]/page.jsx
  *
- * Why this file exists:
- *   - Admin needs full context before verifying.
- *   - Shows gallery, description, amenities, host info, pricing.
- *   - Two actions: Verify (publish) or Reject (with reason).
+ * Admin listing detail.
+ * i18n: keys prefixed with `admin.listings.*`, `property.detail.*`, `property.specs.*`, `common.buttons.*`.
  */
 
 'use client';
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Badge, Button, EmptyState, Input, Skeleton, Spinner, useToast } from '@/components/ui';
+import { Badge, Button, EmptyState, Input, Skeleton, useToast } from '@/components/ui';
 import { useTranslation } from '@/lib/i18n/I18nProvider';
 import { fetchAdminListingDetail, verifyAdminListing, rejectAdminListing } from '@/lib/admin-listings';
 import { useCurrency } from '@/context/CurrencyContext';
@@ -40,7 +42,7 @@ export default function AdminListingDetailPage() {
       .then(setListing)
       .catch((err) => toast.error(err?.code ? t(`validation.errors.${err.code}`) : t('admin.listings.loadError')))
       .finally(() => setLoading(false));
-  }, [params?.id]);
+  }, [params?.id, t]);
 
   async function handleVerify() {
     setActing(true);

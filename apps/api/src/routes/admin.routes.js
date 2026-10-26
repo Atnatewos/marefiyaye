@@ -16,6 +16,12 @@
  *   POST /api/admin/payments/:id/reject - reject with reason
  */
 
+/**
+ * @file apps/api/src/routes/admin.routes.js
+ *
+ * Admin-only endpoints.
+ */
+
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 import { z } from 'zod';
@@ -30,6 +36,14 @@ import {
   rejectPayment,
   getPaymentDetail,
   getStats,
+  listAllBookings,
+  listAllLeases,
+  listAllViewings,
+  listAllReviews,
+  listAllUsers,
+  listAuditLog,
+  getPlatformSettings,
+  updatePlatformSettings,
 } from '../services/admin.service.js';
 
 const router = Router();
@@ -47,13 +61,15 @@ const rejectSchema = z.object({
   reason: z.string().min(3).max(500),
 });
 
+const settingsPatchSchema = z.record(z.any());
+
+// ── Payments ─────────────────────────────────────────────────────────
+
 router.get('/stats', async (req, res, next) => {
   try {
     const stats = await getStats();
     res.json({ stats });
-  } catch (error) {
-    next(error);
-  }
+  } catch (error) { next(error); }
 });
 
 router.get('/payments', async (req, res, next) => {
@@ -64,36 +80,109 @@ router.get('/payments', async (req, res, next) => {
       req.query.offset ? Number(req.query.offset) : 0
     );
     res.json({ payments });
-  } catch (error) {
-    next(error);
-  }
+  } catch (error) { next(error); }
 });
 
 router.get('/payments/:id', async (req, res, next) => {
   try {
     const payment = await getPaymentDetail(req.params.id);
     res.json({ payment });
-  } catch (error) {
-    next(error);
-  }
+  } catch (error) { next(error); }
 });
 
 router.post('/payments/:id/verify', adminLimiter, async (req, res, next) => {
   try {
     const result = await verifyPayment(req.params.id, req.user.sub);
     res.json(result);
-  } catch (error) {
-    next(error);
-  }
+  } catch (error) { next(error); }
 });
 
 router.post('/payments/:id/reject', adminLimiter, validate(rejectSchema), async (req, res, next) => {
   try {
     const result = await rejectPayment(req.params.id, req.user.sub, req.body.reason);
     res.json(result);
-  } catch (error) {
-    next(error);
-  }
+  } catch (error) { next(error); }
+});
+
+// ── Bookings / Leases / Viewings / Reviews / Users / Audit ──────────
+
+router.get('/bookings', async (req, res, next) => {
+  try {
+    const items = await listAllBookings(
+      req.query.status,
+      req.query.limit ? Number(req.query.limit) : 100,
+      req.query.offset ? Number(req.query.offset) : 0
+    );
+    res.json({ items });
+  } catch (error) { next(error); }
+});
+
+router.get('/leases', async (req, res, next) => {
+  try {
+    const items = await listAllLeases(
+      req.query.status,
+      req.query.limit ? Number(req.query.limit) : 100,
+      req.query.offset ? Number(req.query.offset) : 0
+    );
+    res.json({ items });
+  } catch (error) { next(error); }
+});
+
+router.get('/viewings', async (req, res, next) => {
+  try {
+    const items = await listAllViewings(
+      req.query.status,
+      req.query.limit ? Number(req.query.limit) : 100,
+      req.query.offset ? Number(req.query.offset) : 0
+    );
+    res.json({ items });
+  } catch (error) { next(error); }
+});
+
+router.get('/reviews', async (req, res, next) => {
+  try {
+    const items = await listAllReviews(
+      req.query.limit ? Number(req.query.limit) : 100,
+      req.query.offset ? Number(req.query.offset) : 0
+    );
+    res.json({ items });
+  } catch (error) { next(error); }
+});
+
+router.get('/users', async (req, res, next) => {
+  try {
+    const items = await listAllUsers(
+      req.query.limit ? Number(req.query.limit) : 100,
+      req.query.offset ? Number(req.query.offset) : 0
+    );
+    res.json({ items });
+  } catch (error) { next(error); }
+});
+
+router.get('/audit-log', async (req, res, next) => {
+  try {
+    const items = await listAuditLog(
+      req.query.limit ? Number(req.query.limit) : 100,
+      req.query.offset ? Number(req.query.offset) : 0
+    );
+    res.json({ items });
+  } catch (error) { next(error); }
+});
+
+// ── Settings ─────────────────────────────────────────────────────────
+
+router.get('/settings', async (req, res, next) => {
+  try {
+    const settings = await getPlatformSettings();
+    res.json({ settings });
+  } catch (error) { next(error); }
+});
+
+router.patch('/settings', validate(settingsPatchSchema), async (req, res, next) => {
+  try {
+    const settings = await updatePlatformSettings(req.body, req.user.sub);
+    res.json({ settings });
+  } catch (error) { next(error); }
 });
 
 export default router;

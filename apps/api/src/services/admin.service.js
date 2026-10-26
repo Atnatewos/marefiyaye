@@ -1,12 +1,7 @@
 /**
  * @file apps/api/src/services/admin.service.js
  *
- * Admin payment verification business logic.
- *
- * Why this file exists:
- *   - Verify = update payment → VERIFIED, update booking → CONFIRMED, write audit log — all in one transaction.
- *   - Reject = update payment → REJECTED, update booking → CANCELLED, write audit log.
- *   - Without transaction, a partial failure (e.g. audit log fails) leaves inconsistent state.
+ * Admin business logic.
  */
 
 import { transaction } from '../config/db.js';
@@ -15,27 +10,26 @@ import {
   findPaymentForAdmin,
   getAdminStats,
   insertAuditLog,
+  findAllBookingsForAdmin,
+  findAllLeasesForAdmin,
+  findAllViewingsForAdmin,
+  findAllReviewsForAdmin,
+  findAllUsersForAdmin,
+  findAuditLogForAdmin,
+  findAllPlatformSettings,
+  upsertPlatformSetting,
 } from '../queries/admin.queries.js';
 import { updateBookingStatus } from '../queries/bookings.queries.js';
-import { query } from '../config/db.js';
 import { TABLES } from '@marefiyaye/config/database';
 import { NotFoundError, ValidationError } from '../utils/errors.js';
 
-/**
- * Lists payments for the admin queue.
- */
+// ── Payments ─────────────────────────────────────────────────────────
+
 export async function listAdminPayments(status, limit, offset) {
   const rows = await findPaymentsForAdmin(status, limit, offset);
   return rows.map(toPublicAdminPayment);
 }
 
-/**
- * Verifies a payment: marks payment VERIFIED, confirms the booking, writes audit log.
- *
- * @param {string} paymentId
- * @param {string} adminId
- * @returns {Promise<{ payment: object, booking: object }>}
- */
 export async function verifyPayment(paymentId, adminId) {
   return transaction(async (client) => {
     const { rows } = await client.query(
@@ -47,8 +41,6 @@ export async function verifyPayment(paymentId, adminId) {
     if (payment.status !== 'AWAITING_VERIFICATION') {
       throw new ValidationError(`Cannot verify a payment with status ${payment.status}`);
     }
-
-    // Update payment
     const { rows: updatedPay } = await client.query(
       `UPDATE ${TABLES.PAYMENTS}
        SET status = 'VERIFIED', verified_by = $2, verified_at = NOW()
@@ -56,14 +48,10 @@ export async function verifyPayment(paymentId, adminId) {
        RETURNING *`,
       [paymentId, adminId]
     );
-
-    // If linked to a booking, confirm it
     let updatedBooking = null;
     if (payment.booking_id) {
       updatedBooking = await updateBookingStatus(client, payment.booking_id, 'CONFIRMED');
     }
-
-    // Audit log
     await insertAuditLog(client, {
       actorId: adminId,
       action: 'payment.verified',
@@ -72,18 +60,10 @@ export async function verifyPayment(paymentId, adminId) {
       before: { status: 'AWAITING_VERIFICATION' },
       after: { status: 'VERIFIED' },
     });
-
     return { payment: updatedPay[0], booking: updatedBooking };
   });
 }
 
-/**
- * Rejects a payment: marks payment REJECTED, cancels the booking, writes audit log.
- *
- * @param {string} paymentId
- * @param {string} adminId
- * @param {string} reason
- */
 export async function rejectPayment(paymentId, adminId, reason) {
   if (!reason || reason.trim().length < 3) {
     throw new ValidationError('Rejection reason is required (min 3 chars)');
@@ -98,7 +78,6 @@ export async function rejectPayment(paymentId, adminId, reason) {
     if (payment.status !== 'AWAITING_VERIFICATION') {
       throw new ValidationError(`Cannot reject a payment with status ${payment.status}`);
     }
-
     const { rows: updatedPay } = await client.query(
       `UPDATE ${TABLES.PAYMENTS}
        SET status = 'REJECTED', verified_by = $2, verified_at = NOW(), rejection_reason = $3
@@ -106,12 +85,10 @@ export async function rejectPayment(paymentId, adminId, reason) {
        RETURNING *`,
       [paymentId, adminId, reason.trim()]
     );
-
     let updatedBooking = null;
     if (payment.booking_id) {
       updatedBooking = await updateBookingStatus(client, payment.booking_id, 'CANCELLED');
     }
-
     await insertAuditLog(client, {
       actorId: adminId,
       action: 'payment.rejected',
@@ -120,28 +97,138 @@ export async function rejectPayment(paymentId, adminId, reason) {
       before: { status: 'AWAITING_VERIFICATION' },
       after: { status: 'REJECTED', reason },
     });
-
     return { payment: updatedPay[0], booking: updatedBooking };
   });
 }
 
-/**
- * Fetches a single payment with full context.
- */
 export async function getPaymentDetail(paymentId) {
   const row = await findPaymentForAdmin(paymentId);
   if (!row) throw new NotFoundError('Payment');
   return toPublicAdminPayment(row);
 }
 
-/**
- * Dashboard stats.
- */
 export async function getStats() {
   return getAdminStats();
 }
 
-// ── Mappers ───────────────────────────────────────────────────────────────
+// ── Bookings / Leases / Viewings / Reviews / Users / Audit ──────────
+
+export async function listAllBookings(status, limit, offset) {
+  const rows = await findAllBookingsForAdmin(status, limit, offset);
+  return rows.map((row) => ({
+    id: row.id,
+    guestName: row.guest_name,
+    guestEmail: row.guest_email,
+    propertyTitle: row.property_title,
+    propertySlug: row.property_slug,
+    checkIn: row.check_in,
+    checkOut: row.check_out,
+    guests: row.guests,
+    nights: row.nights,
+    totalEtb: Number(row.total_etb),
+    status: row.status,
+    createdAt: row.created_at,
+  }));
+}
+
+export async function listAllLeases(status, limit, offset) {
+  const rows = await findAllLeasesForAdmin(status, limit, offset);
+  return rows.map((row) => ({
+    id: row.id,
+    tenantName: row.tenant_name,
+    tenantEmail: row.tenant_email,
+    propertyTitle: row.property_title,
+    propertySlug: row.property_slug,
+    leaseStart: row.lease_start,
+    leaseEnd: row.lease_end,
+    months: row.months,
+    monthlyRateEtb: Number(row.monthly_rate_snapshot),
+    totalContractEtb: Number(row.total_contract_etb),
+    status: row.status,
+    createdAt: row.created_at,
+  }));
+}
+
+export async function listAllViewings(status, limit, offset) {
+  const rows = await findAllViewingsForAdmin(status, limit, offset);
+  return rows.map((row) => ({
+    id: row.id,
+    requesterName: row.requester_name,
+    requesterEmail: row.requester_email,
+    propertyTitle: row.property_title,
+    propertySlug: row.property_slug,
+    preferredDate: row.preferred_date,
+    timeSlot: row.time_slot,
+    note: row.note,
+    status: row.status,
+    createdAt: row.created_at,
+  }));
+}
+
+export async function listAllReviews(limit, offset) {
+  const rows = await findAllReviewsForAdmin(limit, offset);
+  return rows.map((row) => ({
+    id: row.id,
+    authorName: row.author_name,
+    propertyTitle: row.property_title,
+    propertySlug: row.property_slug,
+    rating: row.rating,
+    comment: row.comment,
+    createdAt: row.created_at,
+  }));
+}
+
+export async function listAllUsers(limit, offset) {
+  const rows = await findAllUsersForAdmin(limit, offset);
+  return rows.map((row) => ({
+    id: row.id,
+    fullName: row.full_name,
+    email: row.email,
+    phone: row.phone,
+    role: row.role,
+    isVerified: row.is_verified,
+    verificationLevel: row.verification_level,
+    avatarUrl: row.avatar_url,
+    createdAt: row.created_at,
+  }));
+}
+
+export async function listAuditLog(limit, offset) {
+  const rows = await findAuditLogForAdmin(limit, offset);
+  return rows.map((row) => ({
+    id: row.id,
+    actorName: row.actor_name || 'System',
+    actorEmail: row.actor_email,
+    action: row.action,
+    entityType: row.entity_type,
+    entityId: row.entity_id,
+    before: row.before,
+    after: row.after,
+    createdAt: row.created_at,
+  }));
+}
+
+// ── Settings ─────────────────────────────────────────────────────────
+
+export async function getPlatformSettings() {
+  const rows = await findAllPlatformSettings();
+  const obj = {};
+  for (const row of rows) {
+    obj[row.key] = row.value;
+  }
+  return obj;
+}
+
+export async function updatePlatformSettings(patch, adminId) {
+  const results = {};
+  for (const [key, value] of Object.entries(patch)) {
+    const row = await upsertPlatformSetting(key, value, adminId);
+    results[row.key] = row.value;
+  }
+  return getPlatformSettings();
+}
+
+// ── Mappers ──────────────────────────────────────────────────────────
 
 function toPublicAdminPayment(row) {
   return {

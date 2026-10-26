@@ -9,6 +9,13 @@
  *   - Same endpoint powers the public display via aggregate refresh.
  */
 
+/**
+ * @file apps/web/components/booking/ReviewForm.jsx
+ *
+ * Review submission modal.
+ * i18n: uses `property.reviews.*` and `common.buttons.cancel`.
+ */
+
 'use client';
 
 import { useState } from 'react';

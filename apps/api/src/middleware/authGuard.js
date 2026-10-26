@@ -15,45 +15,54 @@
  *   router.post('/admin/payments/:id/verify', adminAuthGuard, verifyHandler);
  */
 
-import { JWT_CONFIG } from '@marefiyaye/config/security';
-import { verifyGuestToken, verifyAdminToken } from '../utils/jwt.js';
-import { UnauthorizedError, ForbiddenError } from '../utils/errors.js';
+/**
+ * @file apps/api/src/middleware/authGuard.js
+ *
+ * Authentication middleware.
+ *
+ * Why this file exists:
+ *   - Protects routes by verifying the JWT cookie.
+ *   - Distinguishes between guest/host (authGuard) and admin (adminAuthGuard).
+ *   - Attaches `req.user` to the request for downstream controllers.
+ */
+
+import { verifyToken, verifyAdminToken, JWT_CONFIG, ADMIN_JWT_CONFIG } from '../utils/jwt.js';
+import { UnauthorizedError } from '../utils/errors.js';
 
 /**
- * Requires a valid guest/host token.
- * Sets `req.user = { sub, role, ... }` on success.
+ * Middleware for guest/host routes.
+ * Expects the `token` cookie.
  */
 export function authGuard(req, res, next) {
+  const token = req.cookies?.[JWT_CONFIG.cookieName];
+  if (!token) {
+    return next(new UnauthorizedError('Authentication required'));
+  }
+
   try {
-    const token = req.cookies?.[JWT_CONFIG.guestCookieName];
-    if (!token) {
-      throw new UnauthorizedError('Authentication required');
-    }
-    req.user = verifyGuestToken(token);
-    next();
+    const payload = verifyToken(token);
+    req.user = payload;
+    return next();
   } catch (error) {
-    next(error);
+    return next(error);
   }
 }
 
 /**
- * Requires a valid ADMIN token.
- * Uses a separate secret so guest tokens cannot unlock admin endpoints.
- * Sets `req.user = { sub, role: 'ADMIN', ... }` on success.
+ * Middleware for admin routes.
+ * Expects the `admin_token` cookie.
  */
 export function adminAuthGuard(req, res, next) {
+  const token = req.cookies?.[ADMIN_JWT_CONFIG.cookieName];
+  if (!token) {
+    return next(new UnauthorizedError('Admin authentication required'));
+  }
+
   try {
-    const token = req.cookies?.[JWT_CONFIG.adminCookieName];
-    if (!token) {
-      throw new UnauthorizedError('Admin authentication required');
-    }
     const payload = verifyAdminToken(token);
-    if (payload.role !== 'ADMIN') {
-      throw new ForbiddenError('Admin access required');
-    }
     req.user = payload;
-    next();
+    return next();
   } catch (error) {
-    next(error);
+    return next(error);
   }
 }

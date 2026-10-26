@@ -2,13 +2,13 @@
  * @file apps/web/app/admin/properties/page.jsx
  *
  * Admin listing verification queue.
+ */
+
+/**
+ * @file apps/web/app/admin/properties/page.jsx
  *
- * Why this file exists:
- *   - Admins review new listings before they go live.
- *   - Filter tabs by verification status.
- *   - Click a card → detail page for review.
- *
- * i18n: all strings via `t()`.
+ * Admin listing verification queue.
+ * i18n: keys prefixed with `admin.listings.*`, `property.detail.*`, `payment.status.*`.
  */
 
 'use client';
@@ -58,7 +58,6 @@ export default function AdminListingsPage() {
         {t('admin.listings.description')}
       </p>
 
-      {/* Tabs */}
       <div style={{ display: 'flex', gap: 'var(--space-2)', marginBottom: 'var(--space-6)', overflowX: 'auto' }}>
         {TABS.map((tab) => (
           <button
@@ -81,7 +80,6 @@ export default function AdminListingsPage() {
         ))}
       </div>
 
-      {/* Loading */}
       {loading && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
           {Array.from({ length: 5 }).map((_, i) => (
@@ -90,7 +88,6 @@ export default function AdminListingsPage() {
         </div>
       )}
 
-      {/* Empty */}
       {!loading && listings.length === 0 && (
         <EmptyState
           icon={<span style={{ fontSize: '48px' }}>📋</span>}
@@ -99,7 +96,6 @@ export default function AdminListingsPage() {
         />
       )}
 
-      {/* List */}
       {!loading && listings.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
           {listings.map((l) => (

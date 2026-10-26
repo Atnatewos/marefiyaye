@@ -1,0 +1,31 @@
+/**
+ * @file packages/i18n/src/messages/am/validation.js
+ *
+ * Amharic — Validation namespace.
+ * Wrapped in `{ validation: { ... } }`.
+ */
+
+const messages = {
+  validation: {
+    errors: {
+      ValidationError: 'እባክዎ የቅጹን መስኮች ያረጋግጡ እና እንደገና ይሞክሩ።',
+      UnauthorizedError: 'የተሳሳተ ኢሜይል ወይም የይለፍ ቃል።',
+      ForbiddenError: 'ይህን ለማድረግ ፈቃድ የለዎትም።',
+      NotFoundError: 'የተጠየቀው ንጥል አልተገኘም።',
+      ConflictError: 'ይህ ድርጊት ከአሁኑ ሁኔታ ጋር ይጋጫል።',
+      TooManyRequestsError: 'ብዙ ጥያቄዎች። እባክዎ ቀስ ይበሉ።',
+      InternalError: 'የሆነ ስህተት ተፈጥሯል። እባክዎ እንደገና ይሞክሩ።',
+      NetworkError: 'የኔትወርክ ስህተት — ግንኙነትዎን ያረጋግጡ።',
+      UnknownError: 'ያልተጠበቀ ስህተት ተከስቷል።',
+    },
+    forms: {
+      required: 'ይህ መስክ ያስፈልጋል።',
+      invalidEmail: 'እባክዎ ትክክለኛ ኢሜይል ያስገቡ።',
+      passwordMin: 'የይለፍ ቃል ቢያንስ 8 ፊደላት መሆን አለበት።',
+      invalidPhone: 'እባክዎ ትክክለኛ የኢትዮጵያ ስልክ ቁጥር ያስገቡ።',
+      invalidDate: 'እባክዎ ትክክለኛ ቀን ያስገቡ።',
+    },
+  },
+};
+
+export default messages;

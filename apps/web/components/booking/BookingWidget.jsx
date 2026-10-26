@@ -6,6 +6,13 @@
  * i18n: every visible string flows through `t()`.
  */
 
+/**
+ * @file apps/web/components/booking/BookingWidget.jsx
+ *
+ * Booking widget + checkout modal.
+ * i18n: keys prefixed with `booking.` (widget + checkout).
+ */
+
 'use client';
 
 import { useState } from 'react';

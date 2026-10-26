@@ -1,18 +1,19 @@
 /**
  * @file apps/api/src/routes/properties.routes.js
  *
- * Property endpoints — public read, host-authenticated create.
+ * Property endpoints — public read, host-authenticated create/update.
  *
  * Why this file exists:
  *   - Public browsing (feed + detail) lives here.
- *   - Listing creation is host-only, protected by authGuard + roleGuard.
+ *   - Listing creation and editing are host-only.
  *   - All endpoints return JSON; errors flow through the shared error handler.
  *
  * Endpoints:
- *   POST /api/properties              - create listing (HOST or ADMIN only)
- *   GET  /api/properties/cities       - list cities with counts
- *   GET  /api/properties              - list with filters + pagination
- *   GET  /api/properties/:slug        - single property detail
+ *   POST  /api/properties              - create listing (HOST or ADMIN only)
+ *   PATCH /api/properties/:id          - update listing (HOST only, own listings)
+ *   GET   /api/properties/cities       - list cities with counts
+ *   GET   /api/properties              - list with filters + pagination
+ *   GET   /api/properties/:slug        - single property detail
  *
  * Route order matters: `/` and `/cities` are declared BEFORE `/:slug`
  * so they aren't captured as a slug.
@@ -22,12 +23,13 @@ import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 
 import { RATE_LIMITS } from '@marefiyaye/config/security';
-import { createListingSchema } from '@marefiyaye/config/validation';
+import { createListingSchema, updateListingSchema } from '@marefiyaye/config/validation';
 
 import {
   listProperties,
   getPropertyBySlug,
   createProperty,
+  updateProperty,
 } from '../services/property.service.js';
 import { findAvailableCities } from '../queries/properties.queries.js';
 import { authGuard } from '../middleware/authGuard.js';
@@ -36,9 +38,6 @@ import { validate } from '../middleware/validate.js';
 
 const router = Router();
 
-/**
- * Rate limit for listing creation — prevents spam.
- */
 const createLimiter = rateLimit({
   windowMs: RATE_LIMITS.applications.windowMs,
   max: RATE_LIMITS.applications.max,
@@ -54,7 +53,6 @@ const createLimiter = rateLimit({
 
 /**
  * POST /api/properties
- * Create a new listing. HOST or ADMIN only.
  */
 router.post(
   '/',
@@ -73,8 +71,26 @@ router.post(
 );
 
 /**
+ * PATCH /api/properties/:id
+ * Update a listing. HOST only, must own the listing.
+ */
+router.patch(
+  '/:id',
+  authGuard,
+  roleGuard('HOST', 'ADMIN'),
+  validate(updateListingSchema),
+  async (req, res, next) => {
+    try {
+      const property = await updateProperty(req.params.id, req.user.sub, req.body);
+      res.json({ property });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+/**
  * GET /api/properties/cities
- * Returns the list of cities with property counts.
  */
 router.get('/cities', async (req, res, next) => {
   try {
@@ -87,7 +103,6 @@ router.get('/cities', async (req, res, next) => {
 
 /**
  * GET /api/properties
- * List with filters + pagination.
  */
 router.get('/', async (req, res, next) => {
   try {
@@ -111,7 +126,6 @@ router.get('/', async (req, res, next) => {
 
 /**
  * GET /api/properties/:slug
- * Single property detail.
  */
 router.get('/:slug', async (req, res, next) => {
   try {

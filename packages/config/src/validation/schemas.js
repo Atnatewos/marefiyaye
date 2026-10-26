@@ -80,25 +80,6 @@ const optionalString = z.string().optional().default('');
 
 /**
  * Schema for `apps/api` environment variables.
- *
- * Fields:
- *   NODE_ENV               – runtime mode; controls logging verbosity and errors
- *   PORT                   – API server port
- *   DATABASE_URL           – pooled Neon connection string (runtime queries)
- *   DATABASE_DIRECT_URL    – direct Neon connection (migrations only)
- *   JWT_SECRET             – signing secret for guest/host tokens
- *   ADMIN_JWT_SECRET       – signing secret for admin tokens (distinct, mandatory)
- *   JWT_EXPIRES_IN         – guest token lifetime (e.g. "7d")
- *   ADMIN_JWT_EXPIRES_IN   – admin token lifetime (shorter by design)
- *   PUBLIC_WEB_URL         – public frontend origin (CORS + redirects)
- *   ADMIN_WEB_URL          – admin frontend origin (CORS + redirects)
- *   EXCHANGE_RATE_ETB_PER_USD – fallback conversion rate when no live rate is available
- *   CLOUDINARY_*           – optional image hosting credentials (enabled from P4)
- *   LOG_LEVEL              – pino log level (defaults to 'info')
- *   ADMIN_NOTIFICATION_EMAIL – optional admin contact email
- *
- * Note: bank account numbers are NOT env vars. They are stored in the
- * `platform_settings` table and managed via the admin panel at runtime.
  */
 export const apiEnvSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
@@ -132,8 +113,7 @@ export const apiEnvSchema = z.object({
  * Schema for `apps/web` environment variables.
  *
  * Every `NEXT_PUBLIC_*` variable is bundled into client JavaScript, so this schema
- * intentionally contains ZERO secrets. Server-only values (`ADMIN_JWT_SECRET`) are
- * validated separately below and must never be exposed to the browser.
+ * intentionally contains ZERO secrets.
  */
 export const webPublicEnvSchema = z.object({
   NEXT_PUBLIC_API_URL: urlSchema,
@@ -146,10 +126,6 @@ export const webPublicEnvSchema = z.object({
 
 /**
  * Server-only environment variables for `apps/web`.
- *
- * These must NEVER be prefixed with `NEXT_PUBLIC_` — doing so would leak the admin
- * signing secret into the client bundle. This schema is only invoked from
- * server-side code (middleware, server actions, route handlers).
  */
 export const webServerEnvSchema = z.object({
   ADMIN_JWT_SECRET: jwtSecretSchema,
@@ -176,20 +152,41 @@ export function validateEnv(schema, rawEnv, label) {
   );
 }
 
-// Auth schemas live in their own file for clarity
-export { emailField, passwordField, fullNameField, ethiopianPhoneField, loginSchema, registerSchema } from './authSchemas.js';
+// Auth schemas
+export {
+  emailField,
+  passwordField,
+  fullNameField,
+  ethiopianPhoneField,
+  loginSchema,
+  registerSchema,
+} from './authSchemas.js';
 
 // Booking schemas
-export { createBookingSchema, cancelBookingSchema, submitPaymentSchema } from './bookingSchemas.js';
+export {
+  createBookingSchema,
+  cancelBookingSchema,
+  submitPaymentSchema,
+} from './bookingSchemas.js';
 
 // Lease schemas
-export { applyForLeaseSchema, scheduleViewingSchema, approveLeaseSchema } from './leaseSchemas.js';
+export {
+  applyForLeaseSchema,
+  scheduleViewingSchema,
+  approveLeaseSchema,
+} from './leaseSchemas.js';
 
-// Listing schemas
-export { createListingSchema } from './listingSchemas.js';
+// Listing schemas — both create and update (update is used by PATCH /api/properties/:id)
+export {
+  createListingSchema,
+  updateListingSchema,
+} from './listingSchemas.js';
 
 // Admin listing schemas
-export { verifyListingSchema, rejectListingSchema } from './adminListingSchemas.js';
+export {
+  verifyListingSchema,
+  rejectListingSchema,
+} from './adminListingSchemas.js';
 
 // Review schemas
 export { submitReviewSchema } from './reviewSchemas.js';

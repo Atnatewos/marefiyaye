@@ -1,99 +1,80 @@
 /**
  * @file apps/api/src/utils/jwt.js
  *
- * JWT signing and verification utilities.
+ * JWT generation and verification.
  *
  * Why this file exists:
- *   - Every auth flow needs sign + verify in one place.
- *   - Guest tokens and admin tokens use DIFFERENT secrets — an admin token
- *     cannot be forged from a guest session and vice versa.
- *   - All config (algorithm, issuer, cookie names, expirations) comes from
- *     `@marefiyaye/config/security` and env vars — no hardcoding.
- *
- * Usage:
- *   const guestToken = signGuestToken({ sub: userId, role: 'GUEST' });
- *   const adminToken = signAdminToken({ sub: adminId, role: 'ADMIN' });
- *   const payload = verifyGuestToken(cookieValue); // throws if invalid
+ *   - Two distinct secrets: one for guests/hosts, one for admins.
+ *   - Centralizing the signing/verify logic prevents secret drift.
+ *   - Every token includes BOTH `id` and `sub` claims. Routes that use
+ *     `req.user.sub` (standard JWT claim name) and routes that use
+ *     `req.user.id` (internal convention) both work.
  */
 
 import jwt from 'jsonwebtoken';
-import { JWT_CONFIG } from '@marefiyaye/config/security';
 import { apiEnv } from '../config/env.js';
 import { UnauthorizedError } from './errors.js';
 
+export const JWT_CONFIG = {
+  secret: apiEnv.JWT_SECRET,
+  expiresIn: '7d',
+  cookieName: 'token',
+  maxAgeMs: 7 * 24 * 60 * 60 * 1000,
+};
+
+export const ADMIN_JWT_CONFIG = {
+  secret: apiEnv.ADMIN_JWT_SECRET,
+  expiresIn: '12h',
+  cookieName: 'admin_token',
+  maxAgeMs: 12 * 60 * 60 * 1000,
+};
+
 /**
- * Signs a guest/host token.
+ * Signs a guest/host JWT.
  *
- * @param {object} payload - Must include `sub` (user UUID) and `role`.
- * @returns {string} Signed JWT string.
+ * @param {{ id: string, role: string }} payload
+ * @returns {string}
  */
-export function signGuestToken(payload) {
-  return jwt.sign(payload, apiEnv.JWT_SECRET, {
-    algorithm: JWT_CONFIG.algorithm,
-    issuer: JWT_CONFIG.issuer,
-    expiresIn: apiEnv.JWT_EXPIRES_IN,
-  });
+export function generateToken(payload) {
+  return jwt.sign(
+    { id: payload.id, sub: payload.id, role: payload.role },
+    JWT_CONFIG.secret,
+    { expiresIn: JWT_CONFIG.expiresIn }
+  );
 }
 
 /**
- * Signs an admin token.
- * Uses a SEPARATE secret so an admin token cannot be forged via guest credentials.
- *
- * @param {object} payload - Must include `sub` (admin UUID) and `role: 'ADMIN'`.
- * @returns {string} Signed JWT string.
+ * Verifies a guest/host JWT.
  */
-export function signAdminToken(payload) {
-  return jwt.sign(payload, apiEnv.ADMIN_JWT_SECRET, {
-    algorithm: JWT_CONFIG.algorithm,
-    issuer: JWT_CONFIG.issuer,
-    expiresIn: apiEnv.ADMIN_JWT_EXPIRES_IN,
-  });
-}
-
-/**
- * Verifies a guest/host token.
- *
- * @param {string} token
- * @returns {object} Decoded payload.
- * @throws {UnauthorizedError} When the token is invalid or expired.
- */
-export function verifyGuestToken(token) {
+export function verifyToken(token) {
   try {
-    return jwt.verify(token, apiEnv.JWT_SECRET, {
-      algorithms: [JWT_CONFIG.algorithm],
-      issuer: JWT_CONFIG.issuer,
-    });
-  } catch (error) {
-    if (error.name === 'TokenExpiredError') {
-      throw new UnauthorizedError('Session expired');
-    }
-    throw new UnauthorizedError('Invalid authentication token');
+    return jwt.verify(token, JWT_CONFIG.secret);
+  } catch {
+    throw new UnauthorizedError('Invalid or expired token');
   }
 }
 
 /**
- * Verifies an admin token.
- * Uses the admin secret — a guest token will fail here.
+ * Signs an admin JWT.
  *
- * @param {string} token
- * @returns {object} Decoded payload.
- * @throws {UnauthorizedError}
+ * @param {{ id: string, role: string }} payload
+ * @returns {string}
+ */
+export function generateAdminToken(payload) {
+  return jwt.sign(
+    { id: payload.id, sub: payload.id, role: payload.role },
+    ADMIN_JWT_CONFIG.secret,
+    { expiresIn: ADMIN_JWT_CONFIG.expiresIn }
+  );
+}
+
+/**
+ * Verifies an admin JWT.
  */
 export function verifyAdminToken(token) {
   try {
-    const payload = jwt.verify(token, apiEnv.ADMIN_JWT_SECRET, {
-      algorithms: [JWT_CONFIG.algorithm],
-      issuer: JWT_CONFIG.issuer,
-    });
-    if (payload.role !== 'ADMIN') {
-      throw new UnauthorizedError('Admin access required');
-    }
-    return payload;
-  } catch (error) {
-    if (error instanceof UnauthorizedError) throw error;
-    if (error.name === 'TokenExpiredError') {
-      throw new UnauthorizedError('Admin session expired');
-    }
-    throw new UnauthorizedError('Invalid admin token');
+    return jwt.verify(token, ADMIN_JWT_CONFIG.secret);
+  } catch {
+    throw new UnauthorizedError('Invalid or expired admin token');
   }
 }

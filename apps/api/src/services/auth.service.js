@@ -8,130 +8,141 @@
  *   - Password comparison, JWT signing, and role checks live in one place.
  *   - No Express imports — service is unit-testable and reusable from scripts.
  *
- * Contract: services return plain objects or throw typed errors. Controllers
- * translate to HTTP responses.
+ * Critical detail — ADMIN tokens MUST be signed with the admin secret:
+ *   - `generateAdminToken` signs with `ADMIN_JWT_SECRET`.
+ *   - `adminAuthGuard` verifies with `ADMIN_JWT_SECRET`.
+ *   - Using `generateToken` (guest secret) here would cause the guard to
+ *     reject every admin request as "Invalid or expired admin token".
  */
 
-import bcrypt from 'bcryptjs';
 import { query } from '../config/db.js';
-import { signGuestToken, signAdminToken } from '../utils/jwt.js';
-import { UnauthorizedError, NotFoundError } from '../utils/errors.js';
+import { hashPassword, verifyPassword } from '../utils/password.js';
+import { generateToken, generateAdminToken } from '../utils/jwt.js';
+import { ConflictError, UnauthorizedError } from '../utils/errors.js';
 
 /**
- * Finds a user by email — returns the row or null.
- * Explicit column list (never SELECT *) so password hashes are the only
- * extra column the auth service sees.
+ * Creates a new user.
  *
- * @param {string} email
- * @returns {Promise<{id: string, email: string, full_name: string, password_hash: string, role: string, is_verified: boolean, avatar_url: string|null} | null>}
+ * @param {object} data - { fullName, email, phone, password, role }
+ * @returns {Promise<{ user: object, token: string }>}
  */
-async function findUserByEmail(email) {
-  const { rows } = await query(
-    `SELECT id, email, full_name, password_hash, role, is_verified, avatar_url
-     FROM users
-     WHERE email = $1
-     LIMIT 1`,
-    [email]
+export async function register(data) {
+  const { fullName, email, phone, password, role } = data;
+
+  const existing = await query('SELECT id FROM users WHERE email = $1', [email]);
+  if (existing.rows.length > 0) {
+    throw new ConflictError('Email is already registered');
+  }
+
+  const passwordHash = await hashPassword(password);
+
+  const result = await query(
+    `INSERT INTO users (full_name, email, phone, password_hash, role, is_verified)
+     VALUES ($1, $2, $3, $4, $5, FALSE)
+     RETURNING id, full_name, email, role, is_verified`,
+    [fullName, email, phone, passwordHash, role]
   );
-  return rows[0] ?? null;
+
+  const user = result.rows[0];
+  const token = generateToken({ id: user.id, role: user.role });
+
+  return { user, token };
 }
 
 /**
- * Finds a user by ID — returns the row or null.
- *
- * @param {string} id
+ * Authenticates a guest/host user.
  */
-async function findUserById(id) {
-  const { rows } = await query(
-    `SELECT id, email, full_name, role, is_verified, avatar_url, phone, verification_level
-     FROM users
-     WHERE id = $1
-     LIMIT 1`,
+export async function login(email, password) {
+  const result = await query('SELECT * FROM users WHERE email = $1', [email]);
+  const user = result.rows[0];
+
+  if (!user || !(await verifyPassword(password, user.password_hash))) {
+    throw new UnauthorizedError('Invalid email or password');
+  }
+
+  if (user.role === 'ADMIN') {
+    throw new UnauthorizedError('Use the admin login portal');
+  }
+
+  const token = generateToken({ id: user.id, role: user.role });
+  return { user: formatUser(user), token };
+}
+
+/**
+ * Authenticates an admin.
+ *
+ * Signs the JWT with the admin secret — the corresponding `adminAuthGuard`
+ * verifies with the same secret. Guests and admins have DISTINCT secrets so
+ * a guest token can never unlock admin endpoints, and vice versa.
+ */
+export async function adminLogin(email, password) {
+  const result = await query(
+    'SELECT * FROM users WHERE email = $1 AND role = $2',
+    [email, 'ADMIN']
+  );
+  const user = result.rows[0];
+
+  if (!user || !(await verifyPassword(password, user.password_hash))) {
+    throw new UnauthorizedError('Invalid admin credentials');
+  }
+
+  const token = generateAdminToken({ id: user.id, role: user.role });
+  return { user: formatUser(user), token };
+}
+
+export async function getUserById(id) {
+  const result = await query(
+    'SELECT id, email, full_name, role, is_verified, avatar_url, phone FROM users WHERE id = $1',
     [id]
   );
-  return rows[0] ?? null;
+  return result.rows[0];
 }
 
 /**
- * Returns a user-safe shape — strips password_hash and maps snake_case to camelCase.
- */
-function toPublicUser(row) {
-  return {
-    id: row.id,
-    email: row.email,
-    fullName: row.full_name,
-    role: row.role,
-    isVerified: row.is_verified,
-    avatarUrl: row.avatar_url,
-    phone: row.phone || null,
-    verificationLevel: row.verification_level ?? 0,
-  };
-}
-
-/**
- * Authenticates a user with email/password.
- * Signs a GUEST token (guest or host); ADMIN users must use `authenticateAdmin`.
- *
- * @param {{ email: string, password: string }} credentials
- * @returns {Promise<{ token: string, user: object }>}
- * @throws {UnauthorizedError} When email or password is wrong.
- */
-export async function authenticateGuest(credentials) {
-  const row = await findUserByEmail(credentials.email);
-  if (!row) {
-    throw new UnauthorizedError('Invalid email or password');
-  }
-
-  const passwordMatch = await bcrypt.compare(credentials.password, row.password_hash);
-  if (!passwordMatch) {
-    throw new UnauthorizedError('Invalid email or password');
-  }
-
-  // Admin accounts cannot use the guest login endpoint
-  if (row.role === 'ADMIN') {
-    throw new UnauthorizedError('Admin accounts must sign in via the admin panel');
-  }
-
-  const token = signGuestToken({ sub: row.id, role: row.role });
-  return { token, user: toPublicUser(row) };
-}
-
-/**
- * Authenticates an admin user.
- * Signs an ADMIN token with the separate admin secret.
- *
- * @param {{ email: string, password: string }} credentials
- * @returns {Promise<{ token: string, user: object }>}
- * @throws {UnauthorizedError} When email/password is wrong or user isn't ADMIN.
- */
-export async function authenticateAdmin(credentials) {
-  const row = await findUserByEmail(credentials.email);
-  if (!row) {
-    throw new UnauthorizedError('Invalid email or password');
-  }
-
-  const passwordMatch = await bcrypt.compare(credentials.password, row.password_hash);
-  if (!passwordMatch) {
-    throw new UnauthorizedError('Invalid email or password');
-  }
-
-  if (row.role !== 'ADMIN') {
-    throw new UnauthorizedError('This account does not have admin access');
-  }
-
-  const token = signAdminToken({ sub: row.id, role: 'ADMIN' });
-  return { token, user: toPublicUser(row) };
-}
-
-/**
- * Fetches a user by ID for the /me endpoint.
+ * Updates a user's profile fields (name, phone, avatar).
+ * Only provided fields are updated.
  *
  * @param {string} userId
- * @returns {Promise<object>}
- * @throws {NotFoundError} When the user does not exist (e.g. deleted account).
+ * @param {{ fullName?: string, phone?: string, avatarUrl?: string }} patch
+ * @returns {Promise<object>} Updated public user.
  */
-export async function getUserById(userId) {
-  const row = await findUserById(userId);
-  if (!row) throw new NotFoundError('User');
-  return toPublicUser(row);
+export async function updateProfile(userId, patch) {
+  const fields = [];
+  const params = [userId];
+
+  if (patch.fullName !== undefined) {
+    params.push(patch.fullName);
+    fields.push(`full_name = $${params.length}`);
+  }
+  if (patch.phone !== undefined) {
+    params.push(patch.phone);
+    fields.push(`phone = $${params.length}`);
+  }
+  if (patch.avatarUrl !== undefined) {
+    params.push(patch.avatarUrl);
+    fields.push(`avatar_url = $${params.length}`);
+  }
+
+  if (fields.length === 0) {
+    return getUserById(userId);
+  }
+
+  const { rows } = await query(
+    `UPDATE users SET ${fields.join(', ')}, updated_at = NOW()
+     WHERE id = $1
+     RETURNING id, email, full_name, role, is_verified, avatar_url, phone`,
+    params
+  );
+  return rows[0];
+}
+
+function formatUser(dbUser) {
+  return {
+    id: dbUser.id,
+    fullName: dbUser.full_name,
+    email: dbUser.email,
+    role: dbUser.role,
+    isVerified: dbUser.is_verified,
+    avatarUrl: dbUser.avatar_url,
+  };
 }

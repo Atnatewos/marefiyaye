@@ -1,0 +1,71 @@
+/**
+ * @file packages/i18n/src/messages/am/dashboard.js
+ *
+ * Amharic — Dashboard namespace.
+ * Wrapped in `{ dashboard: { ... } }`.
+ */
+
+const messages = {
+  dashboard: {
+    trips: {
+      title: 'ጉዞዎቼ',
+      description: 'ቦታ ማስያዝዎችዎ — ከመጠባበቅ እስከ መረጋገጥ።',
+      empty: {
+        title: 'እስካሁን ጉዞ የለም',
+        description: 'ንብረቶችን ያስሱ እና የመጀመሪያ ቆይታዎን ይያዙ።',
+        action: 'ንብረቶችን ያስሱ',
+      },
+      loadError: 'ጉዞዎችን መጫን አልተቻለም',
+    },
+    leases: {
+      title: 'የኪራይ ውሎቼ',
+      description: 'የረጅም ጊዜ የኪራይ ማመልከቻዎችና የተፈረሙ ስምምነቶች።',
+      empty: {
+        title: 'የኪራይ ማመልከቻ የለም',
+        description: 'ለረጅም ጊዜ ኪራይ ያመልክቱ እና ውሎችዎን እዚህ ያዩ።',
+      },
+      viewDocument: 'የኪራይ ሰነድ ተመልከት',
+      loadError: 'ውሎችን መጫን አልተቻለም',
+    },
+    nav: {
+      guest: 'እንግዳ',
+      host: 'አስተናጋጅ',
+      overview: 'አጠቃላይ እይታ',
+      listings: 'ዝርዝሮች',
+      bookings: 'ቦታ ማስያዞች',
+      viewings: 'ጉብኝቶች',
+      messages: 'መልዕክቶች',
+      settings: 'ቅንብሮች',
+    },
+    host: {
+      title: 'የአስተናጋጅ ዳሽቦርድ',
+      description: 'ንብረቶችዎን፣ ቦታ ማስያዞችዎን እና ጉብኝቶችዎን ያስተዳድሩ።',
+      loadError: 'የአስተናጋጅ መረጃ መጫን አልተቻለም',
+      kpis: {
+        totalListings: 'ጠቅላላ ዝርዝሮች',
+        totalBookings: 'ጠቅላላ ቦታ ማስያዞች',
+        pendingViewings: 'በመጠባበቅ ላይ ጉብኝቶች',
+      },
+      listingsTitle: 'ዝርዝሮቼ',
+      listingsDescription: 'ንብረቶችዎን ይመልከቱ እና ያስተዳድሩ።',
+      listingsEmpty: 'እስካሁን ዝርዝር የለም',
+      newListing: 'አዲስ ዝርዝር ጨምር',
+      edit: 'አስተካክል',
+      revenue: 'ጠቅላላ ገቢ',
+      bookingsTitle: 'የገቡ ቦታ ማስያዞች',
+      bookingsDescription: 'በንብረቶችዎ ላይ የተደረጉ ቦታ ማስያዞች።',
+      bookingsEmpty: 'እስካሁን ቦታ ማስያዝ የለም',
+      bookingsEmptyDescription: 'እንግዶች እስካሁን አልያዙም።',
+      viewingsTitle: 'የጉብኝት ጥያቄዎች',
+      viewingsDescription: 'ለማጽደቅ ወይም ለመሰረዝ በመጠባበቅ ላይ ያሉ ጉብኝቶች።',
+      viewingsEmpty: 'እስካሁን ጉብኝት የለም',
+      viewingsEmptyDescription: 'እንግዶች እስካሁን ጉብኝት አልጠየቁም።',
+      viewingUpdated: 'የጉብኝት ሁኔታ ተሻሽሏል',
+      viewingUpdateFailed: 'ጉብኝትን ማሻሻል አልተቻለም',
+      confirm: 'አረጋግጥ',
+      cancel: 'ሰርዝ',
+    },
+  },
+};
+
+export default messages;

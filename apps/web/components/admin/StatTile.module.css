@@ -1,0 +1,49 @@
+/**
+ * @file apps/web/components/admin/StatTile.module.css
+ */
+
+.tile {
+  display: block;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-2xl);
+  padding: var(--space-5);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color var(--duration-fast), box-shadow var(--duration-fast);
+}
+
+.tile:hover {
+  border-color: var(--color-brand-400);
+  box-shadow: var(--shadow-md);
+}
+
+.label {
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  color: var(--text-muted);
+  margin-bottom: var(--space-2);
+}
+
+.value {
+  font-size: var(--text-3xl);
+  font-weight: var(--font-weight-black);
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.value.warning { color: var(--color-amber-600, #d97706); }
+.value.success { color: var(--color-emerald-600, #059669); }
+.value.danger  { color: var(--color-red-600, #dc2626); }
+.value.info    { color: var(--color-sky-600, #0284c7); }
+.value.brand   { color: var(--color-brand-600); }
+.value.default { color: var(--text-primary); }
+
+.view {
+  margin-top: var(--space-3);
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-brand-600);
+}

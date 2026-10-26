@@ -2,8 +2,13 @@
  * @file apps/web/components/lease/LeaseActions.jsx
  *
  * Lease actions for long-term property detail pages.
+ */
+
+/**
+ * @file apps/web/components/lease/LeaseActions.jsx
  *
- * i18n: every visible string flows through `t()`.
+ * Lease actions.
+ * i18n: all keys prefixed with `lease.`.
  */
 
 'use client';

@@ -59,7 +59,7 @@ export const BRAND_COPY = Object.freeze({
   heroTitleEn: 'Find Your Resting Stay - Nightly or Long Lease.',
   heroTitleAm: 'የማረፊያ ቦታዎን ያግኙ - በአጭርም ሆነ በረጅም ጊዜ ኪራይ።',
   heroSubtitleEn:
-    "Ethiopia's first hybrid housing engine, bridging short diaspora stays and long-term residences.",
+    "Ethiopia's first hybrid housing engine, bridging short stays and long-term residences.",
   heroSubtitleAm:
     'የኢትዮጵያ የመጀመሪያው ሁለት ዓይነት የቤት ኪራይ መድረክ - ለአጭርና ለረጅም ጊዜ ቆይታ።',
   footerAttributionEn: 'Addis Ababa, Ethiopia.',

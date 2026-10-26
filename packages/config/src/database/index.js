@@ -1,6 +1,8 @@
 /**
- * Database configuration exports.
- * Why: table names, enums, and pool settings centralized to prevent drift.
+ * @file packages/config/src/database/index.js
+ *
+ * Database configuration barrel.
  */
-export * from './tables.js';
-export * from './pool.js';
+
+export { TABLES, ENUMS, COLUMNS, ENUM_VALUES } from './tables.js';
+export { POOL_CONFIG } from './pool.js';

@@ -31,7 +31,23 @@ const MS_PER_DAY = 24 * 60 * 60 * 1000;
  * @returns {Date}
  */
 function toUtcDate(value) {
-  const date = value instanceof Date ? value : new Date(`${value}T00:00:00.000Z`);
+  // If the value is already a Date, we need to extract the UTC components directly
+  // to avoid the "Invalid Date" crash caused by appending a time string to a Date object.
+  if (value instanceof Date) {
+    if (Number.isNaN(value.getTime())) {
+      throw new TypeError(`Invalid date value: ${value}`);
+    }
+    return new Date(Date.UTC(
+      value.getUTCFullYear(),
+      value.getUTCMonth(),
+      value.getUTCDate()
+    ));
+  }
+
+  // If it's a string, we assume it might be an ISO string without time
+  // and safely append the UTC midnight time if it's just a date.
+  const stringValue = String(value).split('T')[0];
+  const date = new Date(`${stringValue}T00:00:00.000Z`);
 
   if (Number.isNaN(date.getTime())) {
     throw new TypeError(`Invalid date value: ${value}`);

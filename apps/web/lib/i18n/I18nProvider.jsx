@@ -4,19 +4,17 @@
  * Translation context and hook.
  *
  * Why this file exists:
- *   - Components call `useTranslation()` and get a `t(key, vars)` resolver.
- *   - Locale switching is one function call — the whole tree updates.
- *   - Message dictionaries come from `@marefiyaye/i18n` — single source.
+ *   - Wraps the app in a React context that exposes `{ locale, setLocale, t }`.
+ *   - Loads the translations tree once per locale and memoizes the translator
+ *     so component re-renders are cheap.
+ *   - Persists the user's locale choice via cookie so it survives reloads.
  *
- * Error handling:
- *   - Missing key → returns the key path itself (visible in dev, easy to spot).
- *   - Missing locale → falls back to DEFAULT_LOCALE (English).
- *   - Load failure → returns the key path, never throws.
+ * Design:
+ *   - `t` is created by `createT(translations, fallback)` from `@marefiyaye/i18n`.
+ *   - `t` supports dot-paths, plurals (`_one`/`_other`), and `{{var}}` interpolation.
+ *   - Missing keys return the raw key path (visible in dev, silent in prod).
  *
- * Usage:
- *   const { t, locale, setLocale, dir } = useTranslation();
- *   <h1>{t('auth.login.title')}</h1>
- *   <p>{t('common.labels.nights_other', { count: 3 })}</p>
+ * Contract: components call `useTranslation()` and destructure `{ t, locale, setLocale }`.
  */
 
 'use client';
@@ -33,16 +31,17 @@ import {
   DEFAULT_LOCALE,
   LOCALE_COOKIE_NAME,
   SUPPORTED_LOCALES,
+  createT,
+  getFallbackTranslations,
   getLocaleConfig,
+  getTranslations,
   isSupportedLocale,
-  loadMessages,
-  loadFallbackMessages,
 } from '@marefiyaye/i18n';
 
 const I18nContext = createContext(null);
 
 /**
- * Reads a cookie value on the client.
+ * Reads a cookie by name. Returns null on the server.
  */
 function readCookie(name) {
   if (typeof document === 'undefined') return null;
@@ -51,7 +50,7 @@ function readCookie(name) {
 }
 
 /**
- * Writes a 1-year cookie.
+ * Writes a cookie with a 1-year expiry. No-op on the server.
  */
 function writeCookie(name, value) {
   if (typeof document === 'undefined') return;
@@ -61,46 +60,22 @@ function writeCookie(name, value) {
 }
 
 /**
- * Interpolates {{varName}} placeholders in a message string.
+ * I18nProvider — wraps the app and provides `t`, `locale`, `setLocale`.
  */
-function interpolate(template, vars) {
-  if (typeof template !== 'string') return template;
-  if (!vars) return template;
-  return template.replace(/\{\{(\w+)\}\}/g, (_, key) =>
-    vars[key] !== undefined && vars[key] !== null ? String(vars[key]) : ''
-  );
-}
-
-/**
- * Resolves a translation key against the current and fallback dictionaries.
- * Handles plural suffixes: `_one` / `_other` based on `count` var.
- */
-function resolve(dict, fallbackDict, key, vars) {
-  // Pluralization: prefer `key_one` when count === 1, else `key_other`
-  if (vars && typeof vars.count === 'number') {
-    const suffix = vars.count === 1 ? '_one' : '_other';
-    const pluralKey = `${key}${suffix}`;
-    if (dict[pluralKey] !== undefined) return interpolate(dict[pluralKey], vars);
-    if (fallbackDict[pluralKey] !== undefined) return interpolate(fallbackDict[pluralKey], vars);
-  }
-
-  if (dict[key] !== undefined) return interpolate(dict[key], vars);
-  if (fallbackDict[key] !== undefined) return interpolate(fallbackDict[key], vars);
-
-  // Missing key — return the key path so it's visible in UI during development
-  return key;
-}
-
 export function I18nProvider({ children, initialLocale }) {
   const [locale, setLocaleState] = useState(() => {
     if (initialLocale && isSupportedLocale(initialLocale)) return initialLocale;
     return DEFAULT_LOCALE;
   });
 
-  const [messages, setMessages] = useState(() => loadMessages(locale));
-  const [fallbackMessages] = useState(() => loadFallbackMessages());
+  // Translations trees — recompute when locale changes
+  const translations = useMemo(() => getTranslations(locale), [locale]);
+  const fallback = useMemo(() => getFallbackTranslations(), []);
 
-  // Hydrate from cookie on mount (overrides initialLocale only if cookie is set)
+  // Translator — bound to current trees
+  const t = useMemo(() => createT(translations, fallback), [translations, fallback]);
+
+  // Hydrate from cookie on mount (only if the cookie holds a valid locale)
   useEffect(() => {
     const cookieLocale = readCookie(LOCALE_COOKIE_NAME);
     if (cookieLocale && isSupportedLocale(cookieLocale) && cookieLocale !== locale) {
@@ -109,25 +84,11 @@ export function I18nProvider({ children, initialLocale }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Reload messages whenever locale changes
-  useEffect(() => {
-    try {
-      setMessages(loadMessages(locale));
-    } catch {
-      setMessages(loadFallbackMessages());
-    }
-  }, [locale]);
-
   const setLocale = useCallback((next) => {
     if (!isSupportedLocale(next)) return;
     setLocaleState(next);
     writeCookie(LOCALE_COOKIE_NAME, next);
   }, []);
-
-  const t = useCallback(
-    (key, vars) => resolve(messages, fallbackMessages, key, vars),
-    [messages, fallbackMessages]
-  );
 
   const localeConfig = getLocaleConfig(locale);
 

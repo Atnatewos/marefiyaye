@@ -1,17 +1,6 @@
 /**
  * @file apps/web/app/admin/dashboard/page.jsx
  *
- * Admin dashboard — KPI tiles placeholder.
- *
- * Why this file exists:
- *   - Admin landing page after login.
- *   - Shows KPI cards (real data ships in P1).
- *   - Provides quick links to main admin sections.
- */
-
-/**
- * @file apps/web/app/admin/dashboard/page.jsx
- *
  * Admin dashboard with real KPIs from /api/admin/stats.
  */
 
@@ -22,36 +11,38 @@ import Link from 'next/link';
 import { Skeleton, useToast } from '@/components/ui';
 import { fetchAdminStats } from '@/lib/admin';
 import { ROUTES } from '@marefiyaye/config/app';
+import { useTranslation } from '@/lib/i18n/I18nProvider';
 
 export default function AdminDashboardPage() {
   const toast = useToast();
+  const { t } = useTranslation();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchAdminStats()
       .then(setStats)
-      .catch((err) => toast.error(err.message || 'Failed to load stats'))
+      .catch((err) => toast.error(err.message || t('dashboard.loadError')))
       .finally(() => setLoading(false));
-  }, []);
+  }, [t]);
 
   const cards = stats
     ? [
-        { label: 'Pending Payments', value: stats.pendingPayments, href: ROUTES.ADMIN.PAYMENTS, accent: 'warning' },
-        { label: 'Verified Payments', value: stats.verifiedPayments, href: ROUTES.ADMIN.PAYMENTS, accent: 'success' },
-        { label: 'Active Bookings', value: stats.activeBookings, href: ROUTES.ADMIN.BOOKINGS, accent: 'info' },
-        { label: 'Total Properties', value: stats.totalProperties, href: ROUTES.ADMIN.PROPERTIES, accent: 'brand' },
-        { label: 'Registered Users', value: stats.totalUsers, href: ROUTES.ADMIN.USERS, accent: 'default' },
+        { label: t('dashboard.kpis.pendingPayments'), value: stats.pendingPayments, href: ROUTES.ADMIN.PAYMENTS, accent: 'warning' },
+        { label: t('dashboard.kpis.verifiedPayments'), value: stats.verifiedPayments, href: ROUTES.ADMIN.PAYMENTS, accent: 'success' },
+        { label: t('dashboard.kpis.activeBookings'), value: stats.activeBookings, href: ROUTES.ADMIN.BOOKINGS, accent: 'info' },
+        { label: t('dashboard.kpis.totalProperties'), value: stats.totalProperties, href: ROUTES.ADMIN.PROPERTIES, accent: 'brand' },
+        { label: t('dashboard.kpis.totalUsers'), value: stats.totalUsers, href: ROUTES.ADMIN.USERS, accent: 'default' },
       ]
     : [];
 
   return (
     <div>
       <h1 style={{ fontSize: 'var(--text-2xl)', fontWeight: 'var(--font-weight-black)', marginBottom: 'var(--space-2)' }}>
-        Admin Dashboard
+        {t('dashboard.title')}
       </h1>
       <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 'var(--space-8)' }}>
-        Platform activity at a glance.
+        {t('dashboard.description')}
       </p>
 
       {loading ? (
@@ -81,7 +72,7 @@ export default function AdminDashboardPage() {
                 {card.value}
               </div>
               <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-brand-600)', marginTop: 'var(--space-2)' }}>
-                View →
+                {t('dashboard.viewLink')}
               </div>
             </Link>
           ))}

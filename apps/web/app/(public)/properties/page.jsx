@@ -3,14 +3,26 @@
  *
  * Public property feed — real data from Neon.
  *
+ * Why this file exists:
+ *   - The main explore page for guests to browse properties.
+ *   - Bypasses the broken `PropertyGrid` wrapper and maps `PropertyCard` directly
+ *     into a reliable CSS grid to prevent infinite loading/crashes.
+ *
  * i18n: every visible string flows through `t()`.
+ */
+
+/**
+ * @file apps/web/app/(public)/properties/page.jsx
+ *
+ * Property feed.
+ * i18n: all keys prefixed with `property.`.
  */
 
 'use client';
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { PropertyCard } from '@/components/property';
+import { PropertyCard } from '@/components/property/PropertyCard';
 import { SkeletonCard, EmptyState } from '@/components/ui';
 import { useSearch } from '@/context/SearchContext';
 import { useCurrency } from '@/context/CurrencyContext';
@@ -78,7 +90,6 @@ export default function PropertiesPage() {
         <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>{countLabel}</p>
       </div>
 
-      {/* Category filter pills */}
       <div style={{ display: 'flex', gap: 'var(--space-3)', overflowX: 'auto', paddingBottom: 'var(--space-3)', marginBottom: 'var(--space-6)' }} className="no-scrollbar">
         <button
           type="button"
@@ -119,7 +130,6 @@ export default function PropertiesPage() {
         ))}
       </div>
 
-      {/* Grid */}
       {loading && (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 'var(--space-6)' }}>
           {Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)}

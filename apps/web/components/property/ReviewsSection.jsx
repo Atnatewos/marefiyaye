@@ -2,11 +2,13 @@
  * @file apps/web/components/property/ReviewsSection.jsx
  *
  * Reviews display for a property.
+ */
+
+/**
+ * @file apps/web/components/property/ReviewsSection.jsx
  *
- * Why this component exists:
- *   - Read-only section rendered on property detail.
- *   - Shows aggregate rating, individual reviews, empty state.
- *   - i18n: all strings via `t()`.
+ * Property reviews.
+ * i18n: keys prefixed with `property.reviews.`.
  */
 
 'use client';

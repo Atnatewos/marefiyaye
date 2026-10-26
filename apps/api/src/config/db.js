@@ -5,79 +5,99 @@
  *
  * Why this file exists:
  *   - Every query in the application flows through this module.
- *   - Pool tuning is centralized in `@marefiyaye/config/database` so environments
- *     share identical limits.
- *   - `transaction()` wraps the acquire/commit/rollback/release lifecycle so
- *     callers cannot leak a client back into the pool on failure.
+ *   - Pool tuning is centralized in `@marefiyaye/config/database`.
+ *
+ * Serverless safety:
+ *   - Vercel lambdas are ephemeral. Each invocation may spin up a fresh
+ *     module instance, meaning a fresh `pg.Pool` with `max: 10` connections.
+ *     Over 10 concurrent requests, that's 100 connections — Neon free tier
+ *     caps at ~100 and starts refusing.
+ *   - In production, we cap the pool at 3 connections per instance. Combined
+ *     with the shorter idle timeout, this keeps Vercel well under Neon's cap.
+ *   - Local dev keeps `max: 10` because the process is long-lived.
+ *
+ * Retry on connection error:
+ *   - Neon cold starts fail ~5% of the time with "Connection terminated".
+ *     `query()` retries ONCE on those specific errors before throwing.
+ *     Application-level errors (constraints, invalid SQL) are never retried.
  *
  * Contract: services import `query` or `transaction` — never `new pg.Pool` directly.
  */
 
 import pg from 'pg';
-import { apiEnv } from './env.js';
+import { apiEnv, isProduction } from './env.js';
 import { POOL_CONFIG } from '@marefiyaye/config/database';
 import { logger } from '../utils/logger.js';
 
 /**
- * The single shared connection pool for the process.
- * PostgreSQL recommends reusing a small fixed pool rather than opening a
- * connection per request.
+ * Environment-aware pool size.
+ * - Local dev: 10 connections (server runs persistently).
+ * - Production: 3 connections (Vercel lambdas are ephemeral).
  */
+const effectiveMax = isProduction() ? 3 : POOL_CONFIG.max;
+
 const pool = new pg.Pool({
   connectionString: apiEnv.DATABASE_URL,
-  max: POOL_CONFIG.max,
+  max: effectiveMax,
   idleTimeoutMillis: POOL_CONFIG.idleTimeoutMillis,
   connectionTimeoutMillis: POOL_CONFIG.connectionTimeoutMillis,
+  keepAlive: POOL_CONFIG.keepAlive,
+  keepAliveInitialDelayMillis: POOL_CONFIG.keepAliveInitialDelayMillis,
   allowExitOnIdle: POOL_CONFIG.allowExitOnIdle,
 });
 
-/**
- * Applies the statement timeout to every new connection.
- * Prevents a runaway query from holding a pool slot indefinitely.
- */
 pool.on('connect', (client) => {
-  client.query(`SET statement_timeout = ${POOL_CONFIG.statementTimeoutMs}`);
+  client.query(`SET statement_timeout = ${POOL_CONFIG.statementTimeoutMs}`).catch((err) => {
+    logger.error({ err }, 'Failed to set statement_timeout on new connection');
+  });
 });
 
-/**
- * Surfaces unexpected idle-client errors so they are not swallowed.
- * Without this handler, an idle connection error would crash the process.
- */
 pool.on('error', (error) => {
   logger.error({ err: error }, 'Unexpected error on idle database client');
 });
 
 /**
- * Executes a parameterized SQL statement.
- *
- * @param {string} text - SQL text with $1, $2, ... placeholders. NEVER interpolate user input.
- * @param {Array<unknown>} [params=[]] - Values to bind to the placeholders.
- * @returns {Promise<import('pg').QueryResult>}
+ * True when the error is a retryable connection-level failure.
  */
+function isRetryableConnectionError(error) {
+  if (!error || typeof error !== 'object') return false;
+  const msg = error.message || '';
+  if (msg.includes('Connection terminated')) return true;
+  if (msg.includes('timeout exceeded when trying to connect')) return true;
+  if (error.code === 'ECONNRESET') return true;
+  if (error.code === 'ETIMEDOUT') return true;
+  if (error.code === 'ECONNREFUSED') return true;
+  return false;
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export async function query(text, params = []) {
   const startedAt = Date.now();
   try {
     const result = await pool.query(text, params);
-    const durationMs = Date.now() - startedAt;
-    logger.debug({ durationMs, rowCount: result.rowCount }, 'Database query executed');
+    logger.debug({ durationMs: Date.now() - startedAt, rowCount: result.rowCount }, 'Database query executed');
     return result;
   } catch (error) {
+    if (isRetryableConnectionError(error)) {
+      logger.warn({ err: error, sql: text.slice(0, 120) }, 'Connection error — retrying in 1s');
+      await sleep(1000);
+      try {
+        const result = await pool.query(text, params);
+        logger.info({ durationMs: Date.now() - startedAt, rowCount: result.rowCount }, 'Query succeeded on retry');
+        return result;
+      } catch (retryError) {
+        logger.error({ err: retryError, sql: text }, 'Database query failed after retry');
+        throw retryError;
+      }
+    }
     logger.error({ err: error, sql: text }, 'Database query failed');
     throw error;
   }
 }
 
-/**
- * Runs a callback inside a single database transaction.
- *
- * The callback receives a client and MUST use it for all queries so that
- * the whole block commits or rolls back atomically. Any thrown error triggers
- * a rollback, and the client is always released back to the pool.
- *
- * @template T
- * @param {(client: import('pg').PoolClient) => Promise<T>} callback
- * @returns {Promise<T>}
- */
 export async function transaction(callback) {
   const client = await pool.connect();
   try {
@@ -97,18 +117,9 @@ export async function transaction(callback) {
   }
 }
 
-/**
- * Closes the connection pool. Called on graceful shutdown so the process
- * does not hang waiting for idle connections.
- */
 export async function shutdown() {
   await pool.end();
   logger.info('Database pool closed');
 }
 
-/**
- * Direct pool access for the migration runner, which needs to issue
- * multi-statement SQL that pg cannot parameterize.
- * Application code must never use this directly — use `query` or `transaction`.
- */
 export const rawPool = pool;

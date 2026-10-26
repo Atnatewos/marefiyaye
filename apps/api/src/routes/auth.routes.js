@@ -16,118 +16,103 @@
  *   POST /api/auth/admin/logout   → clear admin cookie
  *   GET  /api/auth/admin/me       → current admin user
  */
+/**
+ * @file apps/api/src/routes/auth.routes.js
+ *
+ * Authentication routes.
+ */
 
-import { Router } from 'express';
-import rateLimit from 'express-rate-limit';
-
-import { loginSchema } from '@marefiyaye/config/validation';
-import { RATE_LIMITS } from '@marefiyaye/config/security';
-import { apiEnv } from '../config/env.js';
-
+import express from 'express';
 import { validate } from '../middleware/validate.js';
 import { authGuard, adminAuthGuard } from '../middleware/authGuard.js';
+import * as authService from '../services/auth.service.js';
+import { loginSchema, registerSchema } from '@marefiyaye/config/validation';
+import { setAuthCookie, clearAuthCookie, setAdminCookie, clearAdminCookie } from '../utils/cookieOptions.js';
 
-import {
-  authenticateGuest,
-  authenticateAdmin,
-  getUserById,
-} from '../services/auth.service.js';
-
-import {
-  setGuestCookie,
-  setAdminCookie,
-  clearGuestCookie,
-  clearAdminCookie,
-} from '../utils/cookieOptions.js';
-
-const router = Router();
+const router = express.Router();
 
 /**
- * Auth rate limiter — 5 attempts per 15 minutes per IP.
- * Applied to login endpoints to prevent brute-force.
+ * POST /api/auth/register
+ * Creates a new user account.
  */
-const authLimiter = rateLimit({
-  windowMs: RATE_LIMITS.auth.windowMs,
-  max: RATE_LIMITS.auth.max,
-  message: { error: { message: RATE_LIMITS.auth.message, code: 'TooManyRequestsError' } },
-  standardHeaders: true,
-  legacyHeaders: false,
+router.post('/register', validate(registerSchema), async (req, res) => {
+  const { user, token } = await authService.register(req.body);
+  setAuthCookie(res, token);
+  res.status(201).json({ user });
 });
-
-// ── Guest/host endpoints ──────────────────────────────────────────────────
 
 /**
  * POST /api/auth/login
- * Body: { email, password }
- * Sets `token` cookie on success.
+ * Authenticates a user.
  */
-router.post('/login', authLimiter, validate(loginSchema), async (req, res, next) => {
-  try {
-    const { token, user } = await authenticateGuest(req.body);
-    setGuestCookie(res, token, apiEnv.JWT_EXPIRES_IN);
-    res.json({ user });
-  } catch (error) {
-    next(error);
-  }
+router.post('/login', validate(loginSchema), async (req, res) => {
+  const { user, token } = await authService.login(req.body.email, req.body.password);
+  setAuthCookie(res, token);
+  res.json({ user });
 });
 
 /**
  * POST /api/auth/logout
- * Clears the guest cookie.
+ * Clears the auth cookie.
  */
 router.post('/logout', (req, res) => {
-  clearGuestCookie(res);
-  res.json({ success: true });
+  clearAuthCookie(res);
+  res.status(204).end();
 });
 
 /**
  * GET /api/auth/me
- * Returns the current guest/host user (or 401 if not logged in).
+ * Returns the current user.
  */
-router.get('/me', authGuard, async (req, res, next) => {
-  try {
-    const user = await getUserById(req.user.sub);
-    res.json({ user });
-  } catch (error) {
-    next(error);
-  }
+router.get('/me', authGuard, async (req, res) => {
+  const user = await authService.getUserById(req.user.id);
+  res.json({ user });
 });
-
-// ── Admin endpoints ───────────────────────────────────────────────────────
 
 /**
  * POST /api/auth/admin/login
- * Body: { email, password }
- * Sets `admin_token` cookie on success. Requires ADMIN role.
+ * Authenticates an admin.
  */
-router.post('/admin/login', authLimiter, validate(loginSchema), async (req, res, next) => {
-  try {
-    const { token, user } = await authenticateAdmin(req.body);
-    setAdminCookie(res, token, apiEnv.ADMIN_JWT_EXPIRES_IN);
-    res.json({ user });
-  } catch (error) {
-    next(error);
-  }
+router.post('/admin/login', validate(loginSchema), async (req, res) => {
+  const { user, token } = await authService.adminLogin(req.body.email, req.body.password);
+  setAdminCookie(res, token);
+  res.json({ user });
 });
 
 /**
  * POST /api/auth/admin/logout
+ * Clears the admin cookie.
  */
 router.post('/admin/logout', (req, res) => {
   clearAdminCookie(res);
-  res.json({ success: true });
+  res.status(204).end();
+});
+
+/**
+ * PATCH /api/auth/me
+ * Update own profile (name, phone, avatar URL).
+ */
+router.patch('/me', authGuard, async (req, res, next) => {
+  try {
+    const { fullName, phone, avatarUrl } = req.body;
+    const updated = await authService.updateProfile(req.user.id, {
+      fullName: fullName,
+      phone: phone,
+      avatarUrl: avatarUrl,
+    });
+    res.json({ user: updated });
+  } catch (error) {
+    next(error);
+  }
 });
 
 /**
  * GET /api/auth/admin/me
+ * Returns the current admin.
  */
-router.get('/admin/me', adminAuthGuard, async (req, res, next) => {
-  try {
-    const user = await getUserById(req.user.sub);
-    res.json({ user });
-  } catch (error) {
-    next(error);
-  }
+router.get('/admin/me', adminAuthGuard, async (req, res) => {
+  const user = await authService.getUserById(req.user.id);
+  res.json({ user });
 });
 
 export default router;

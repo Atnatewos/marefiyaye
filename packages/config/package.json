@@ -9,15 +9,13 @@
     "./app": "./src/app/index.js",
     "./business": "./src/business/index.js",
     "./database": "./src/database/index.js",
-    "./security": "./src/security/index.js",
-    "./uploads": "./src/uploads/index.js",
-    "./integrations": "./src/integrations/index.js",
-    "./ui": "./src/ui/index.js",
     "./env/api": "./src/env/api.js",
     "./env/web": "./src/env/web.js",
-    "./validation": "./src/validation/index.js"
-  },
-  "dependencies": {
-    "zod": "3.23.8"
+    "./integrations": "./src/integrations/index.js",
+    "./security": "./src/security/index.js",
+    "./ui": "./src/ui/index.js",
+    "./uploads": "./src/uploads/index.js",
+    "./validation": "./src/validation/index.js",
+    "./admin": "./src/admin/index.js"
   }
 }

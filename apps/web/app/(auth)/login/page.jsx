@@ -2,25 +2,19 @@
  * @file apps/web/app/(auth)/login/page.jsx
  *
  * Guest/host login page.
- *
- * Why this file exists:
- *   - Public users need a login page.
- *   - Admin users have a SEPARATE page (/admin/login) with different endpoint
- *     and different redirect target.
- *   - After successful login, redirect to the dashboard or to the
- *     `redirect` query param set by middleware.
- *
- * i18n: every visible string flows through `t()`.
  */
 
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { AuthLayout } from '@/components/layout/AuthLayout';
 import { Button, Input, useToast } from '@/components/ui';
 import { useAuth } from '@/context/AuthContext';
 import { login } from '@/lib/auth';
 import { useTranslation } from '@/lib/i18n/I18nProvider';
+import { ROUTES } from '@marefiyaye/config/app';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -41,13 +35,11 @@ export default function LoginPage() {
     try {
       const { user } = await login({ email, password });
       setUser(user);
-      toast.success(t('auth.login.success', { name: user.fullName }));
-      const redirectTo = params.get('redirect') || '/dashboard/trips';
+      toast.success(t('login.success', { name: user.fullName }));
+      const redirectTo = params.get('redirect') || ROUTES.DASHBOARD.TRIPS;
       router.push(redirectTo);
     } catch (err) {
-      const msg = err?.code
-        ? t(`validation.errors.${err.code}`)
-        : t('auth.login.error');
+      const msg = err?.code ? t(`validation.errors.${err.code}`) : t('login.error');
       setError(msg);
       toast.error(msg);
     } finally {
@@ -56,44 +48,45 @@ export default function LoginPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--surface-muted)', padding: 'var(--space-4)' }}>
-      <div style={{ maxWidth: '420px', width: '100%', background: 'var(--surface)', borderRadius: 'var(--radius-2xl)', border: '1px solid var(--border)', padding: 'var(--space-8)', boxShadow: 'var(--shadow-xl)' }}>
-        <h1 style={{ fontSize: 'var(--text-2xl)', fontWeight: 'var(--font-weight-black)', marginBottom: 'var(--space-2)' }}>
-          {t('auth.login.title')}
-        </h1>
-        <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 'var(--space-6)' }}>
-          {t('auth.login.description')}
-        </p>
+    <AuthLayout step={1}>
+      <h1 style={{ fontSize: 'var(--text-2xl)', fontWeight: 'var(--font-weight-black)', marginBottom: 'var(--space-2)' }}>
+        {t('login.title')}
+      </h1>
+      <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginBottom: 'var(--space-6)' }}>
+        {t('login.description')}
+      </p>
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-          <Input
-            label={t('auth.login.emailLabel')}
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder={t('auth.login.emailPlaceholder')}
-            required
-            autoComplete="email"
-          />
-          <Input
-            label={t('auth.login.passwordLabel')}
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder={t('auth.login.passwordPlaceholder')}
-            required
-            autoComplete="current-password"
-            error={error || undefined}
-          />
-          <Button type="submit" isLoading={submitting} fullWidth>
-            {t('auth.login.submit')}
-          </Button>
-        </form>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+        <Input
+          label={t('login.emailLabel')}
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder={t('login.emailPlaceholder')}
+          required
+          autoComplete="email"
+        />
+        <Input
+          label={t('login.passwordLabel')}
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder={t('login.passwordPlaceholder')}
+          required
+          autoComplete="current-password"
+          error={error || undefined}
+        />
+        <Button type="submit" isLoading={submitting} fullWidth>
+          {t('login.submit')}
+        </Button>
+      </form>
 
-        <p style={{ marginTop: 'var(--space-4)', fontSize: 'var(--text-xs)', color: 'var(--text-muted)', textAlign: 'center' }}>
-          {t('auth.login.demoHint')}
-        </p>
+      <div style={{ marginTop: 'var(--space-6)', textAlign: 'center', fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>
+        {t('register.signInLink')}{' '}
+        <Link href={ROUTES.AUTH.REGISTER} style={{ color: 'var(--color-brand-600)', fontWeight: 'var(--font-weight-bold)', textDecoration: 'none' }}>
+          {t('register.signInLinkText')}
+        </Link>
       </div>
-    </div>
+    </AuthLayout>
   );
 }

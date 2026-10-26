@@ -15,8 +15,8 @@
 import slugify from 'slugify';
 
 import { findProperties, findPropertyBySlug } from '../queries/properties.queries.js';
-import { transaction } from '../config/db.js';
-import { NotFoundError, ConflictError } from '../utils/errors.js';
+import { transaction, query } from '../config/db.js';
+import { NotFoundError, ConflictError, ForbiddenError } from '../utils/errors.js';
 
 /**
  * Maps a DB property row to the public API shape.
@@ -163,4 +163,93 @@ export async function createProperty(data, hostId) {
   // Reload with host join so the response shape matches GET /api/properties/:slug
   const fullRow = await findPropertyBySlug(slug);
   return toPublicProperty(fullRow || created);
+}
+
+/**
+ * Updates an existing property owned by the caller.
+ *
+ * Security:
+ *   - Only the host who owns the listing can update it. The `hostId`
+ *     parameter is the caller's user ID; it's compared against the
+ *     property's `host_id` inside the transaction, so a malicious caller
+ *     cannot update someone else's listing even with a valid token.
+ *   - The `is_verified` flag is NOT updated — an edit can revoke verification
+ *     (to force re-approval) but never auto-verifies.
+ *
+ * @param {string} propertyId
+ * @param {string} hostId - The caller's user ID.
+ * @param {object} patch - Partial fields matching `updateListingSchema`.
+ * @returns {Promise<object>} Updated property (public shape).
+ */
+export async function updateProperty(propertyId, hostId, patch) {
+  const updated = await transaction(async (client) => {
+    const { rows: existing } = await client.query(
+      'SELECT * FROM properties WHERE id = $1 FOR UPDATE',
+      [propertyId]
+    );
+    const property = existing[0];
+    if (!property) throw new NotFoundError('Property');
+    if (property.host_id !== hostId) {
+      throw new ForbiddenError('You can only edit your own listings');
+    }
+
+    // Build a dynamic SET clause with only the provided fields.
+    const setters = [];
+    const params = [propertyId];
+    const addSet = (column, value) => {
+      if (value === undefined) return;
+      params.push(value);
+      setters.push(`${column} = $${params.length}`);
+    };
+
+    addSet('title', patch.title);
+    addSet('title_am', patch.titleAm);
+    addSet('description', patch.description);
+    addSet('description_am', patch.descriptionAm);
+    addSet('category', patch.category);
+    addSet('city', patch.city);
+    addSet('neighborhood', patch.neighborhood);
+    addSet('stay_type', patch.stayType);
+    addSet('nightly_rate_etb', patch.nightlyRateEtb);
+    addSet('monthly_rate_etb', patch.monthlyRateEtb);
+    addSet('min_lease_months', patch.minLeaseMonths);
+    addSet('security_deposit_etb', patch.securityDepositEtb);
+    addSet('max_guests', patch.maxGuests);
+    addSet('beds', patch.beds);
+    addSet('baths', patch.baths);
+    if (patch.amenities !== undefined) {
+      params.push(JSON.stringify(patch.amenities));
+      setters.push(`amenities = $${params.length}`);
+    }
+    if (patch.utilitiesIncluded !== undefined) {
+      params.push(JSON.stringify(patch.utilitiesIncluded));
+      setters.push(`utilities_included = $${params.length}`);
+    }
+    if (patch.images !== undefined) {
+      params.push(JSON.stringify(patch.images));
+      setters.push(`images = $${params.length}`);
+    }
+
+    if (setters.length === 0) {
+      throw new ConflictError('No fields to update');
+    }
+
+    setters.push(`updated_at = NOW()`);
+    setters.push(`is_verified = FALSE`); // edits require re-approval
+
+    const { rows } = await client.query(
+      `UPDATE properties SET ${setters.join(', ')} WHERE id = $1 RETURNING *`,
+      params
+    );
+    return rows[0];
+  });
+
+  // Reload with host join to return the full public shape
+  const fullRow = await query(
+    `SELECT p.*, u.full_name AS host_name, u.avatar_url AS host_avatar, u.is_verified AS host_verified
+     FROM properties p JOIN users u ON u.id = p.host_id
+     WHERE p.id = $1 LIMIT 1`,
+    [propertyId]
+  );
+  return toPublicProperty(fullRow.rows[0] || updated);
 }
