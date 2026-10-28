@@ -7,12 +7,40 @@
  *   - Backend modules must never read `process.env.X` directly — they import `apiEnv`.
  *   - Validation happens exactly once at boot; misconfiguration fails fast.
  *   - Secrets are centralized so audits only need to inspect this file.
+ *   - Dynamically resolves frontend URLs for CORS to support zero-config deployments.
  *
  * Contract: any module that needs a config value imports it from here.
  * Never read process.env in application code.
  */
 
 import { apiEnvSchema, validateEnv } from '../validation/schemas.js';
+
+/**
+ * Dynamically resolves the Public Web URL for CORS.
+ * 
+ * Resolution order:
+ * 1. Explicit `PUBLIC_WEB_URL` environment variable.
+ * 2. Vercel System Environment Variables (auto-detect deployment URL).
+ * 3. Localhost fallback for local development.
+ * 
+ * @returns {string} The fully qualified frontend URL.
+ */
+function resolvePublicWebUrl() {
+  if (process.env.PUBLIC_WEB_URL) return process.env.PUBLIC_WEB_URL;
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+  return 'http://localhost:3000';
+}
+
+/**
+ * Dynamically resolves the Admin Web URL for CORS.
+ * Defaults to the Public Web URL if not explicitly set.
+ * 
+ * @returns {string} The fully qualified admin frontend URL.
+ */
+function resolveAdminWebUrl() {
+  if (process.env.ADMIN_WEB_URL) return process.env.ADMIN_WEB_URL;
+  return resolvePublicWebUrl();
+}
 
 /**
  * Validated, frozen backend configuration.
@@ -32,8 +60,8 @@ const rawApiEnv = {
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN,
   ADMIN_JWT_EXPIRES_IN: process.env.ADMIN_JWT_EXPIRES_IN,
 
-  PUBLIC_WEB_URL: process.env.PUBLIC_WEB_URL,
-  ADMIN_WEB_URL: process.env.ADMIN_WEB_URL,
+  PUBLIC_WEB_URL: resolvePublicWebUrl(),
+  ADMIN_WEB_URL: resolveAdminWebUrl(),
 
   EXCHANGE_RATE_ETB_PER_USD: process.env.EXCHANGE_RATE_ETB_PER_USD,
 
