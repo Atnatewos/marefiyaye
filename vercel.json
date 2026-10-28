@@ -1,23 +1,24 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
-  "builds": [
-    {
-      "src": "apps/web/package.json",
-      "use": "@vercel/next"
+  "services": {
+    "web": {
+      "root": "apps/web",
+      "framework": "nextjs"
     },
-    {
-      "src": "api/index.js",
-      "use": "@vercel/node"
+    "api": {
+      "root": "apps/api",
+      "framework": "express"
     }
-  ],
-  "routes": [
+  },
+  "rewrites": [
     {
-      "src": "/api/(.*)",
-      "dest": "/api/index.js"
+      "source": "/api/(.*)",
+      "destination": { "service": "api" }
     },
     {
-      "src": "/(.*)",
-      "dest": "/apps/web/$1"
+      "source": "/(.*)",
+      "destination": { "service": "web" }
     }
   ]
 }
