@@ -1,0 +1,137 @@
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ * MAREFIYAYE WEB — Component-Level CSS
+ * Path: apps/web/src/styles/components.css
+ *
+ * Purpose:
+ *   Hand-written CSS for the ~5% of styling Tailwind cannot express cleanly:
+ *     - WebKit scrollbar pseudo-elements
+ *     - Compound hover targets (parent:hover .child)
+ *     - Keyframe animations
+ *     - Range-selection styling on the calendar
+ *
+ *   Rule: this file stays under ~100 lines. If a style can be a Tailwind
+ *   utility, it goes in JSX — not here.
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+
+/* ── Thin scrollbars (Tailwind cannot target ::-webkit-scrollbar) ────────── */
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgb(var(--color-neutral-300));
+  border-radius: 9999px;
+}
+
+.dark .scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgb(var(--color-neutral-700));
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+/* ── Property card hover (compound selector — child scales) ──────────────── */
+
+.property-card:hover .property-card__image {
+  transform: scale(1.05);
+}
+
+/* ── Calendar range selection ────────────────────────────────────────────── */
+
+.calendar-day--in-range {
+  background: rgb(var(--color-brand-50));
+  color: rgb(var(--color-brand-600));
+}
+
+.dark .calendar-day--in-range {
+  background: rgb(var(--color-neutral-700));
+  color: rgb(var(--color-neutral-50));
+}
+
+.calendar-day--edge {
+  background: rgb(var(--color-neutral-900));
+  color: white;
+}
+
+.dark .calendar-day--edge {
+  background: rgb(var(--color-neutral-50));
+  color: rgb(var(--color-neutral-900));
+}
+
+/* ── Keyframes ───────────────────────────────────────────────────────────── */
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up var(--duration-normal) var(--ease-out);
+}
+
+.animate-fade-in {
+  animation: fade-in var(--duration-fast) var(--ease-out);
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right var(--duration-normal) var(--ease-out);
+}
+
+.animate-scale-in {
+  animation: scale-in var(--duration-fast) var(--ease-out);
+}
+
+/* ── Focus ring polish ───────────────────────────────────────────────────── */
+
+*:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgb(var(--color-ring) / 0.35);
+  border-radius: var(--radius-sm);
+}

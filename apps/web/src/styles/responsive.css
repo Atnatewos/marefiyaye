@@ -1,0 +1,47 @@
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ * MAREFIYAYE WEB — Responsive Tokens
+ * Path: apps/web/src/styles/responsive.css
+ *
+ * Purpose:
+ *   Centralized responsive scale. Every layout primitive and page section
+ *   uses these tokens instead of hand-picking px values per breakpoint.
+ *
+ *   Changing a scale value here reflows every page consistently.
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+
+:root {
+  /* ── Horizontal page gutters ── */
+  --gutter-mobile:  1rem;      /* 16px */
+  --gutter-tablet:  1.5rem;    /* 24px */
+  --gutter-desktop: 2rem;      /* 32px */
+
+  /* ── Vertical rhythm (section spacing) ── */
+  --section-gap-mobile:  1.5rem;  /* 24px */
+  --section-gap-tablet:  2rem;    /* 32px */
+  --section-gap-desktop: 3rem;    /* 48px */
+
+  /* ── Content max width ── */
+  --content-max:      80rem;   /* 1280px */
+  --content-narrow:   40rem;   /* 640px */
+  --content-wide:     96rem;   /* 1536px */
+
+  /* ── Touch targets ── */
+  --tap-target-min: 44px;
+}
+
+/* ── Fluid typography ────────────────────────────────────────────────────── */
+
+/* Hero uses `clamp()` so it never overflows on tiny screens */
+.text-hero {
+  font-size: clamp(1.75rem, 5vw, 2.75rem);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.text-section-title {
+  font-size: clamp(1.125rem, 2.5vw, 1.5rem);
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}

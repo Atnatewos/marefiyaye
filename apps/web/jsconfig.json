@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@marefiyaye/shared": ["../../packages/shared/src/index.js"],
+      "@marefiyaye/shared/*": ["../../packages/shared/src/*"]
+    }
+  },
+  "exclude": ["node_modules", ".next"]
+}

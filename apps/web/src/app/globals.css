@@ -1,0 +1,57 @@
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ * MAREFIYAYE WEB — Global Stylesheet
+ * Path: apps/web/src/app/globals.css
+ *
+ * Order matters:
+ *   1. Tailwind base/components/utilities
+ *   2. tokens.css      — design tokens
+ *   3. responsive.css  — responsive scale + fluid typography
+ *   4. components.css  — hand-written extras
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import '../styles/tokens.css';
+@import '../styles/responsive.css';
+@import '../styles/components.css';
+
+@layer base {
+  html {
+    font-family: var(--font-sans);
+    background-color: rgb(var(--color-bg));
+    color: rgb(var(--color-fg));
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    min-height: 100vh;
+    transition:
+      background-color var(--duration-normal) var(--ease-out),
+      color            var(--duration-normal) var(--ease-out);
+  }
+
+  [lang='am'] {
+    font-family: var(--font-ethiopic);
+  }
+
+  ::selection {
+    background: rgb(var(--color-brand-500));
+    color: white;
+  }
+
+  input[type='number']::-webkit-inner-spin-button,
+  input[type='number']::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type='number'] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+}

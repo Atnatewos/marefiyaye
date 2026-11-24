@@ -1,0 +1,24 @@
+{
+  "name": "@marefiyaye/shared",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Shared constants, validators, formatters, i18n locales and config schema for MAREFIYAYE",
+  "type": "module",
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./constants": "./src/constants.js",
+    "./validators": "./src/validators.js",
+    "./formatters": "./src/formatters.js",
+    "./config": "./src/config/index.js",
+    "./config/schema": "./src/config/index.js",
+    "./i18n": "./src/i18n/index.js"
+  },
+  "files": [
+    "src"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

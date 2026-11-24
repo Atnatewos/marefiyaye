@@ -1,0 +1,32 @@
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ * MAREFIYAYE API — Vercel Serverless Entry
+ * Path: apps/api/index.js
+ *
+ * Purpose:
+ *   Adapts the Express app to a Vercel serverless function via
+ *   `serverless-http`. This is the Pattern A bridge — Express middleware,
+ *   routers, and controllers all run unchanged inside Vercel.
+ *
+ *   The Next.js catch-all route `apps/web/src/app/api/v1/[...path]/route.js`
+ *   imports this module and forwards requests through it, so a single
+ *   Vercel project serves both the frontend and the full Express API.
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+
+import serverless from 'serverless-http';
+import app from './src/app.js';
+
+/* ── Serverless handler ──────────────────────────────────────────────────── */
+
+export const handler = serverless(app, {
+  /**
+   * Prevent serverless-http from stripping the `/api/v1` prefix — Next.js
+   * rewrites the URL to pass the full path through.
+   */
+  request(request, event) {
+    request.requestContext = event;
+  },
+});
+
+export default handler;

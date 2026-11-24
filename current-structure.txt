@@ -1,0 +1,330 @@
+.
+  |-- apps
+  |  |-- api
+  |  |  |-- index.js
+  |  |  |-- package.json
+  |  |  |-- scripts
+  |  |  |  |-- login.sh
+  |  |  |  |-- seed-listings.js
+  |  |  |-- src
+  |  |  |  |-- app.js
+  |  |  |  |-- config
+  |  |  |  |  |-- constants.js
+  |  |  |  |  |-- env.js
+  |  |  |  |-- controllers
+  |  |  |  |  |-- admin.controller.js
+  |  |  |  |  |-- auth.controller.js
+  |  |  |  |  |-- bankAccount.controller.js
+  |  |  |  |  |-- banner.controller.js
+  |  |  |  |  |-- bookings.controller.js
+  |  |  |  |  |-- broadcast.controller.js
+  |  |  |  |  |-- config.controller.js
+  |  |  |  |  |-- favorites.controller.js
+  |  |  |  |  |-- host.controller.js
+  |  |  |  |  |-- listings.controller.js
+  |  |  |  |  |-- notifications.controller.js
+  |  |  |  |  |-- payments.controller.js
+  |  |  |  |  |-- uploads.controller.js
+  |  |  |  |-- db
+  |  |  |  |  |-- migrate.js
+  |  |  |  |  |-- migrations
+  |  |  |  |  |  |-- 001_users.sql
+  |  |  |  |  |  |-- 002_hosts.sql
+  |  |  |  |  |  |-- 003_listings.sql
+  |  |  |  |  |  |-- 004_bookings.sql
+  |  |  |  |  |  |-- 005_payments.sql
+  |  |  |  |  |  |-- 006_favorites_reviews.sql
+  |  |  |  |  |  |-- 007_settings.sql
+  |  |  |  |  |  |-- 008_bank_accounts.sql
+  |  |  |  |  |  |-- 009_banners_broadcasts.sql
+  |  |  |  |  |  |-- 010_i18n_overrides.sql
+  |  |  |  |  |  |-- 011_notifications.sql
+  |  |  |  |  |  |-- 012_audit_logs.sql
+  |  |  |  |  |  |-- 013_foreign_keys.sql
+  |  |  |  |  |  |-- 014_drop_i18n_overrides.sql
+  |  |  |  |  |-- pool.js
+  |  |  |  |  |-- seed.js
+  |  |  |  |-- middleware
+  |  |  |  |  |-- auth.middleware.js
+  |  |  |  |  |-- error.middleware.js
+  |  |  |  |  |-- impersonation.middleware.js
+  |  |  |  |  |-- notFound.middleware.js
+  |  |  |  |  |-- role.middleware.js
+  |  |  |  |  |-- validate.middleware.js
+  |  |  |  |-- models
+  |  |  |  |  |-- auditLog.model.js
+  |  |  |  |  |-- bankAccount.model.js
+  |  |  |  |  |-- banner.model.js
+  |  |  |  |  |-- booking.model.js
+  |  |  |  |  |-- broadcast.model.js
+  |  |  |  |  |-- favorite.model.js
+  |  |  |  |  |-- host.model.js
+  |  |  |  |  |-- i18nOverride.model.js
+  |  |  |  |  |-- listing.model.js
+  |  |  |  |  |-- notification.model.js
+  |  |  |  |  |-- payment.model.js
+  |  |  |  |  |-- refreshToken.model.js
+  |  |  |  |  |-- review.model.js
+  |  |  |  |  |-- settings.model.js
+  |  |  |  |  |-- user.model.js
+  |  |  |  |-- routes
+  |  |  |  |  |-- admin.routes.js
+  |  |  |  |  |-- auth.routes.js
+  |  |  |  |  |-- bankAccount.routes.js
+  |  |  |  |  |-- banner.routes.js
+  |  |  |  |  |-- bookings.routes.js
+  |  |  |  |  |-- broadcast.routes.js
+  |  |  |  |  |-- config.routes.js
+  |  |  |  |  |-- favorites.routes.js
+  |  |  |  |  |-- host.routes.js
+  |  |  |  |  |-- index.js
+  |  |  |  |  |-- listings.routes.js
+  |  |  |  |  |-- notifications.routes.js
+  |  |  |  |  |-- payments.routes.js
+  |  |  |  |  |-- uploads.routes.js
+  |  |  |  |-- server.js
+  |  |  |  |-- services
+  |  |  |  |  |-- audit.service.js
+  |  |  |  |  |-- auth.service.js
+  |  |  |  |  |-- bankAccount.service.js
+  |  |  |  |  |-- banner.service.js
+  |  |  |  |  |-- booking.service.js
+  |  |  |  |  |-- broadcast.service.js
+  |  |  |  |  |-- cloudinary.service.js
+  |  |  |  |  |-- commission.service.js
+  |  |  |  |  |-- config.service.js
+  |  |  |  |  |-- host.service.js
+  |  |  |  |  |-- listing.service.js
+  |  |  |  |  |-- notification.service.js
+  |  |  |  |  |-- payment.service.js
+  |  |  |  |-- utils
+  |  |  |  |  |-- asyncHandler.js
+  |  |  |  |  |-- jwt.js
+  |  |  |  |  |-- logger.js
+  |  |  |  |  |-- password.js
+  |  |  |  |  |-- response.js
+  |  |-- web
+  |  |  |-- jsconfig.json
+  |  |  |-- next.config.js
+  |  |  |-- package.json
+  |  |  |-- postcss.config.js
+  |  |  |-- public
+  |  |  |  |-- favicon.ico
+  |  |  |  |-- images
+  |  |  |-- src
+  |  |  |  |-- app
+  |  |  |  |  |-- (admin)
+  |  |  |  |  |  |-- admin
+  |  |  |  |  |  |  |-- _AdminOverviewClient.jsx
+  |  |  |  |  |  |  |-- audit-log
+  |  |  |  |  |  |  |-- bank-accounts
+  |  |  |  |  |  |  |-- banners
+  |  |  |  |  |  |  |-- bookings
+  |  |  |  |  |  |  |-- broadcast
+  |  |  |  |  |  |  |-- hosts
+  |  |  |  |  |  |  |-- i18n
+  |  |  |  |  |  |  |-- layout.jsx
+  |  |  |  |  |  |  |-- listings
+  |  |  |  |  |  |  |-- page.jsx
+  |  |  |  |  |  |  |-- payments
+  |  |  |  |  |  |  |-- settings
+  |  |  |  |  |  |  |-- users
+  |  |  |  |  |  |-- layout.jsx
+  |  |  |  |  |-- (auth)
+  |  |  |  |  |  |-- login
+  |  |  |  |  |  |  |-- _LoginForm.jsx
+  |  |  |  |  |  |  |-- page.jsx
+  |  |  |  |  |  |-- register
+  |  |  |  |  |  |  |-- _RegisterForm.jsx
+  |  |  |  |  |  |  |-- page.jsx
+  |  |  |  |  |-- (guest)
+  |  |  |  |  |  |-- bookings
+  |  |  |  |  |  |  |-- [id]
+  |  |  |  |  |  |  |-- page.jsx
+  |  |  |  |  |-- (host)
+  |  |  |  |  |  |-- dashboard
+  |  |  |  |  |  |  |-- page.jsx
+  |  |  |  |  |-- (main)
+  |  |  |  |  |  |-- _HomeClient.jsx
+  |  |  |  |  |  |-- bookings
+  |  |  |  |  |  |  |-- [id]
+  |  |  |  |  |  |  |-- _BookingsClient.jsx
+  |  |  |  |  |  |  |-- page.jsx
+  |  |  |  |  |  |-- host
+  |  |  |  |  |  |  |-- dashboard
+  |  |  |  |  |  |  |-- register
+  |  |  |  |  |  |-- layout.jsx
+  |  |  |  |  |  |-- page.jsx
+  |  |  |  |  |  |-- saved
+  |  |  |  |  |  |  |-- _SavedClient.jsx
+  |  |  |  |  |  |  |-- page.jsx
+  |  |  |  |  |-- api
+  |  |  |  |  |  |-- v1
+  |  |  |  |  |  |  |-- [...path]
+  |  |  |  |  |-- error.jsx
+  |  |  |  |  |-- globals.css
+  |  |  |  |  |-- layout.jsx
+  |  |  |  |  |-- loading.jsx
+  |  |  |  |  |-- not-found.jsx
+  |  |  |  |  |-- stays
+  |  |  |  |  |  |-- [id]
+  |  |  |  |  |  |  |-- _DetailClient.jsx
+  |  |  |  |  |  |  |-- page.jsx
+  |  |  |  |  |  |-- _StaysClient.jsx
+  |  |  |  |  |  |-- page.jsx
+  |  |  |  |-- components
+  |  |  |  |  |-- admin
+  |  |  |  |  |  |-- ApprovalRow.jsx
+  |  |  |  |  |  |-- AuditLogTable.jsx
+  |  |  |  |  |  |-- PaymentReviewCard.jsx
+  |  |  |  |  |  |-- SettingsForm.jsx
+  |  |  |  |  |  |-- StatCard.jsx
+  |  |  |  |  |-- auth
+  |  |  |  |  |  |-- AuthLayout.jsx
+  |  |  |  |  |-- booking
+  |  |  |  |  |  |-- BookingCard.jsx
+  |  |  |  |  |  |-- BookingStatusBadge.jsx
+  |  |  |  |  |  |-- BookingTimeline.jsx
+  |  |  |  |  |  |-- BookingWidget.jsx
+  |  |  |  |  |  |-- Calendar.jsx
+  |  |  |  |  |  |-- GuestPicker.jsx
+  |  |  |  |  |  |-- PriceBreakdown.jsx
+  |  |  |  |  |-- host
+  |  |  |  |  |  |-- HostListingCard.jsx
+  |  |  |  |  |  |-- ListingForm.jsx
+  |  |  |  |  |  |-- ListingStatusBadge.jsx
+  |  |  |  |  |-- layout
+  |  |  |  |  |  |-- AdminSidebar.jsx
+  |  |  |  |  |  |-- AnnouncementBar.jsx
+  |  |  |  |  |  |-- Breadcrumb.jsx
+  |  |  |  |  |  |-- Container.jsx
+  |  |  |  |  |  |-- Footer.jsx
+  |  |  |  |  |  |-- Grid.jsx
+  |  |  |  |  |  |-- Header.jsx
+  |  |  |  |  |  |-- ImpersonationBanner.jsx
+  |  |  |  |  |  |-- LangSwitcher.jsx
+  |  |  |  |  |  |-- NotificationsDropdown.jsx
+  |  |  |  |  |  |-- ProfileMenu.jsx
+  |  |  |  |  |  |-- Stack.jsx
+  |  |  |  |  |  |-- ThemeToggle.jsx
+  |  |  |  |  |-- listings
+  |  |  |  |  |  |-- AmenitiesList.jsx
+  |  |  |  |  |  |-- Pagination.jsx
+  |  |  |  |  |  |-- PropertyCard.jsx
+  |  |  |  |  |  |-- PropertyGallery.jsx
+  |  |  |  |  |  |-- PropertyGrid.jsx
+  |  |  |  |  |-- notifications
+  |  |  |  |  |-- payment
+  |  |  |  |  |  |-- BankAccountsList.jsx
+  |  |  |  |  |  |-- PaymentModal.jsx
+  |  |  |  |  |  |-- ReceiptUpload.jsx
+  |  |  |  |  |-- search
+  |  |  |  |  |  |-- FilterPills.jsx
+  |  |  |  |  |  |-- ModeSwitcher.jsx
+  |  |  |  |  |  |-- SearchBar.jsx
+  |  |  |  |  |-- ui
+  |  |  |  |  |  |-- Avatar.jsx
+  |  |  |  |  |  |-- Badge.jsx
+  |  |  |  |  |  |-- Button.jsx
+  |  |  |  |  |  |-- Card.jsx
+  |  |  |  |  |  |-- Checkbox.jsx
+  |  |  |  |  |  |-- ConfirmModal.jsx
+  |  |  |  |  |  |-- DataTable.jsx
+  |  |  |  |  |  |-- DatePicker.jsx
+  |  |  |  |  |  |-- Drawer.jsx
+  |  |  |  |  |  |-- Dropdown.jsx
+  |  |  |  |  |  |-- EmptyState.jsx
+  |  |  |  |  |  |-- FileUpload.jsx
+  |  |  |  |  |  |-- index.js
+  |  |  |  |  |  |-- Input.jsx
+  |  |  |  |  |  |-- Modal.jsx
+  |  |  |  |  |  |-- Radio.jsx
+  |  |  |  |  |  |-- Select.jsx
+  |  |  |  |  |  |-- Skeleton.jsx
+  |  |  |  |  |  |-- Spinner.jsx
+  |  |  |  |  |  |-- Switch.jsx
+  |  |  |  |  |  |-- Tabs.jsx
+  |  |  |  |  |  |-- Textarea.jsx
+  |  |  |  |  |  |-- Tooltip.jsx
+  |  |  |  |  |-- upload
+  |  |  |  |  |  |-- ImageUploader.jsx
+  |  |  |  |-- contexts
+  |  |  |  |  |-- AuthContext.jsx
+  |  |  |  |  |-- ConfigContext.jsx
+  |  |  |  |  |-- ConfirmContext.jsx
+  |  |  |  |  |-- I18nContext.jsx
+  |  |  |  |  |-- ToastContext.jsx
+  |  |  |  |-- hooks
+  |  |  |  |  |-- useAuth.js
+  |  |  |  |  |-- useConfig.js
+  |  |  |  |  |-- useConfirm.js
+  |  |  |  |  |-- useDebounce.js
+  |  |  |  |  |-- useI18n.js
+  |  |  |  |  |-- useMediaQuery.js
+  |  |  |  |  |-- useTheme.js
+  |  |  |  |  |-- useToast.js
+  |  |  |  |-- lib
+  |  |  |  |  |-- api.js
+  |  |  |  |  |-- auth-server.js
+  |  |  |  |  |-- cloudinary.js
+  |  |  |  |  |-- env.js
+  |  |  |  |  |-- utils.js
+  |  |  |  |-- styles
+  |  |  |  |  |-- components.css
+  |  |  |  |  |-- responsive.css
+  |  |  |  |  |-- tokens.css
+  |  |  |-- tailwind.config.js
+  |-- current-structure.txt
+  |-- file-structure.txt
+  |-- package.json
+  |-- package-lock.json
+  |-- packages
+  |  |-- shared
+  |  |  |-- index.js
+  |  |  |-- package.json
+  |  |  |-- src
+  |  |  |  |-- config
+  |  |  |  |  |-- defaults.js
+  |  |  |  |  |-- index.js
+  |  |  |  |  |-- schema
+  |  |  |  |  |  |-- booking.js
+  |  |  |  |  |  |-- commission.js
+  |  |  |  |  |  |-- features.js
+  |  |  |  |  |  |-- general.js
+  |  |  |  |  |  |-- payment.js
+  |  |  |  |  |  |-- seo.js
+  |  |  |  |  |  |-- theme.js
+  |  |  |  |-- constants.js
+  |  |  |  |-- formatters.js
+  |  |  |  |-- i18n
+  |  |  |  |  |-- index.js
+  |  |  |  |  |-- locales
+  |  |  |  |  |  |-- am
+  |  |  |  |  |  |  |-- admin.js
+  |  |  |  |  |  |  |-- auth.js
+  |  |  |  |  |  |  |-- booking.js
+  |  |  |  |  |  |  |-- bookings.js
+  |  |  |  |  |  |  |-- common.js
+  |  |  |  |  |  |  |-- errors.js
+  |  |  |  |  |  |  |-- home.js
+  |  |  |  |  |  |  |-- listings.js
+  |  |  |  |  |  |  |-- notifications.js
+  |  |  |  |  |  |  |-- validation.js
+  |  |  |  |  |  |-- en
+  |  |  |  |  |  |  |-- admin.js
+  |  |  |  |  |  |  |-- auth.js
+  |  |  |  |  |  |  |-- booking.js
+  |  |  |  |  |  |  |-- bookings.js
+  |  |  |  |  |  |  |-- common.js
+  |  |  |  |  |  |  |-- errors.js
+  |  |  |  |  |  |  |-- home.js
+  |  |  |  |  |  |  |-- listings.js
+  |  |  |  |  |  |  |-- notifications.js
+  |  |  |  |  |  |  |-- validation.js
+  |  |  |  |  |-- README.md
+  |  |  |  |-- index.js
+  |  |  |  |-- validators.js
+  |-- README.md
+  |-- tools
+  |  |-- merge.sh
+  |-- vercel.json

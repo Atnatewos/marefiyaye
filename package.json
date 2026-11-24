@@ -1,0 +1,33 @@
+{
+  "name": "marefiyaye",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MAREFIYAYE (ማረፊያዬ) — Ethiopia's hybrid home rental marketplace",
+  "author": "Athanasius",
+  "license": "UNLICENSED",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -n WEB,API -c cyan,magenta \"npm:dev:web\" \"npm:dev:api\"",
+    "dev:web": "npm run dev --workspace=apps/web",
+    "dev:api": "npm run dev --workspace=apps/api",
+    "build": "npm run build --workspace=apps/web",
+    "start": "npm run start --workspace=apps/web",
+    "migrate": "npm run migrate --workspace=apps/api",
+    "seed": "npm run seed --workspace=apps/api",
+    "seed:listings": "node apps/api/scripts/seed-listings.js",
+    "lint": "npm run lint --workspace=apps/web",
+    "format": "prettier --write \"**/*.{js,jsx,json,css,md}\" --ignore-path .gitignore",
+    "clean": "rm -rf node_modules apps/*/node_modules packages/*/node_modules apps/web/.next"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0",
+    "prettier": "^3.3.3"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  }
+}

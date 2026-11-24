@@ -1,0 +1,77 @@
+/**
+ * ─────────────────────────────────────────────────────────────────────────────
+ * MAREFIYAYE WEB — Design Tokens
+ * Path: apps/web/src/styles/tokens.css
+ *
+ * Purpose:
+ *   The ONLY place design values (colors, radii, shadows, fonts, motion)
+ *   are declared. Everything else references these via CSS variables or
+ *   Tailwind utilities that map to them.
+ *
+ *   The admin panel can override any of these at runtime by injecting a
+ *   <style> tag with updated :root values — full re-theme without code.
+ *
+ *   Color format: `R G B` (space-separated), NOT hex. Tailwind's
+ *   `rgb(var(--token) / <alpha-value>)` pattern needs this shape to
+ *   support opacity modifiers like `bg-brand-500/50`.
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+
+:root {
+  /* ── Brand palette (defaults — overridable by admin) ── */
+  --color-brand-50:  250 245 240;
+  --color-brand-100: 255 228 230;
+  --color-brand-500: 150 75 0;      /* #964B00 */
+  --color-brand-600: 71 36 0;       /* #472400 */
+  --color-brand-700: 193 7 54;      /* #c10736 */
+
+  /* ── Neutral scale ── */
+  --color-neutral-50:  250 250 250;
+  --color-neutral-100: 245 245 245;
+  --color-neutral-200: 229 229 229;
+  --color-neutral-300: 212 212 212;
+  --color-neutral-400: 163 163 163;
+  --color-neutral-500: 115 115 115;
+  --color-neutral-600: 82 82 82;
+  --color-neutral-700: 64 64 64;
+  --color-neutral-800: 38 38 38;
+  --color-neutral-850: 30 30 30;
+  --color-neutral-900: 20 20 20;
+
+  /* ── Semantic (light mode) ── */
+  --color-bg:     255 255 255;
+  --color-fg:     23 23 23;
+  --color-muted:  115 115 115;
+  --color-border: 229 229 229;
+  --color-ring:   150 75 0;
+
+  /* ── Radii ── */
+  --radius-sm:   8px;
+  --radius-md:   16px;
+  --radius-lg:   24px;
+
+  /* ── Shadows ── */
+  --shadow-card:   0 6px 16px rgb(0 0 0 / 0.08);
+  --shadow-search: 0 3px 12px rgb(0 0 0 / 0.08), 0 1px 2px rgb(0 0 0 / 0.04);
+  --shadow-modal:  0 20px 25px -5px rgb(0 0 0 / 0.10);
+
+  /* ── Motion ── */
+  --duration-fast:   150ms;
+  --duration-normal: 250ms;
+  --duration-slow:   400ms;
+  --ease-out:        cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out:     cubic-bezier(0.65, 0, 0.35, 1);
+
+  /* ── Typography ── */
+  --font-sans:     'Plus Jakarta Sans', 'Noto Sans Ethiopic', system-ui, -apple-system, sans-serif;
+  --font-ethiopic: 'Noto Sans Ethiopic', sans-serif;
+}
+
+/* ── Dark mode semantic overrides ───────────────────────────────────────── */
+
+.dark {
+  --color-bg:     20 20 20;
+  --color-fg:     245 245 245;
+  --color-muted:  163 163 163;
+  --color-border: 64 64 64;
+}
