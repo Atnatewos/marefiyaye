@@ -14,16 +14,25 @@
  *   safely rotate refresh tokens mid-render (would break the client's
  *   cookie state). Instead, Server Components return `{ user: null }` and
  *   the client-side AuthContext handles refresh.
+ *
+ *   Every fetch is bounded by a timeout so a stalled API cannot hang a
+ *   Server Component render up to Vercel's function max duration.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
 import { cookies } from 'next/headers';
 import { env } from './env.js';
 
-/* ── Cookie names (must match API `COOKIE_NAMES`) ────────────────────────── */
+/* ── Constants ───────────────────────────────────────────────────────────── */
 
+/** Cookie names (must match API `COOKIE_NAMES`). */
 const ACCESS_COOKIE = 'mrf_access';
 const REFRESH_COOKIE = 'mrf_refresh';
+
+/** Server-side fetch timeout — keeps renders under Vercel's function limit. */
+const SERVER_FETCH_TIMEOUT_MS = 8_000;
+
+/* ── Cookie header builder ───────────────────────────────────────────────── */
 
 /**
  * Builds a Cookie header string from the incoming Next.js request.
@@ -43,6 +52,29 @@ export async function buildCookieHeader() {
   return pairs.join('; ');
 }
 
+/* ── Timeout helper ──────────────────────────────────────────────────────── */
+
+/**
+ * Wraps a fetch call with an AbortController timeout. Returns a rejected
+ * promise with a descriptive error when the timeout fires.
+ *
+ * @param {string} url
+ * @param {RequestInit} options
+ * @returns {Promise<Response>}
+ */
+async function fetchWithTimeout(url, options) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), SERVER_FETCH_TIMEOUT_MS);
+
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/* ── Current user ────────────────────────────────────────────────────────── */
+
 /**
  * Fetches the current user from the API using the incoming request's cookies.
  * Returns `null` if not authenticated. Safe to call in any Server Component.
@@ -54,7 +86,7 @@ export async function getCurrentUser() {
   if (!cookieHeader) return { user: null, impersonatedBy: null };
 
   try {
-    const res = await fetch(`${env.apiBaseUrl}/auth/me`, {
+    const res = await fetchWithTimeout(`${env.apiBaseUrl}/auth/me`, {
       headers: { Cookie: cookieHeader },
       cache: 'no-store',
     });
@@ -73,19 +105,21 @@ export async function getCurrentUser() {
   }
 }
 
+/* ── Server fetch ────────────────────────────────────────────────────────── */
+
 /**
  * Server-side fetch with cookies forwarded. Used by Server Components to
- * read private data (bookings, favorites, notifications).
+ * read private data (bookings, favorites, notifications, admin resources).
  *
  * @param {string} path
  * @param {RequestInit} [options]
- * @returns {Promise<{ data?: any, error?: { code: string, message: string } }>}
+ * @returns {Promise<{ data?: any, meta?: any, error?: { code: string, message: string } }>}
  */
 export async function serverFetch(path, options = {}) {
   const cookieHeader = await buildCookieHeader();
 
   try {
-    const res = await fetch(`${env.apiBaseUrl}${path}`, {
+    const res = await fetchWithTimeout(`${env.apiBaseUrl}${path}`, {
       ...options,
       headers: {
         Accept: 'application/json',
