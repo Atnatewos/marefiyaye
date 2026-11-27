@@ -32,15 +32,16 @@ export default function PaymentModal({ open, onClose, booking }) {
   const [submitting, setSubmitting] = useState(false);
 
   const amount = booking?.total || 0;
+  const currency = booking?.currency || 'ETB';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!reference.trim()) {
-      toast.error('Please enter the transaction reference');
+      toast.error(t('booking.payment.referenceRequired'));
       return;
     }
     if (!receipt) {
-      toast.error('Please upload a payment receipt');
+      toast.error(t('booking.payment.receiptRequired'));
       return;
     }
 
@@ -53,13 +54,13 @@ export default function PaymentModal({ open, onClose, booking }) {
         receipt_url: receipt.url,
         receipt_public_id: receipt.public_id,
         amount: Number(amount),
-        currency: 'ETB',
+        currency,
       });
       toast.success(t('booking.payment.submitted'));
       onClose();
       router.push(`/bookings/${booking.id}`);
     } catch (err) {
-      toast.error(err.message || 'Payment submission failed');
+      toast.error(err.message || t('booking.payment.submitFailed'));
     } finally {
       setSubmitting(false);
     }
@@ -76,11 +77,13 @@ export default function PaymentModal({ open, onClose, booking }) {
       {/* Summary */}
       <div className="bg-neutral-50 dark:bg-neutral-800/50 p-3 rounded-md border border-border flex items-center justify-between mb-4">
         <div>
-          <p className="text-[10px] font-bold text-muted uppercase">Booking</p>
+          <p className="text-[10px] font-bold text-muted uppercase">
+            {t('booking.payment.bookingLabel')}
+          </p>
           <p className="text-sm font-bold text-fg">{booking?.code}</p>
         </div>
         <p className="text-lg font-extrabold text-brand-500">
-          {Number(amount).toLocaleString()} ETB
+          {Number(amount).toLocaleString()} {currency}
         </p>
       </div>
 
@@ -96,7 +99,7 @@ export default function PaymentModal({ open, onClose, booking }) {
       <form onSubmit={handleSubmit} className="space-y-4">
         <Input
           label={t('booking.payment.step2')}
-          placeholder="e.g. FT24098XXXXX"
+          placeholder={t('booking.payment.referencePlaceholder')}
           value={reference}
           onChange={(e) => setReference(e.target.value)}
           required
