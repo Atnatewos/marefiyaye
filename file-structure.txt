@@ -1,915 +1,125 @@
-
-
-# 📘 MAREFIYAYE — Full Project Documentation for Continuation
-
-**Prepared for:** Handoff to a new coding session
-**Owner:** Athanasius
-**Project:** MAREFIYAYE (ማረፊያዬ) — Ethiopia's Hybrid Home Rental Marketplace
-**Status:** Backend complete, frontend ~90% complete, admin panel finishing
-**Next milestone:** Broadcast Engine (Sub-Step 1.9D) — schema, API, and UI
-
----
-
-## 1. PROJECT OVERVIEW
-
-**MAREFIYAYE** is a full-stack SaaS marketplace for renting homes in Ethiopia. It supports **two rental modes on one platform**:
-
-| Mode | Pricing unit | Target user |
-|---|---|---|
-| **Short-term** | Per night | Tourists, business travelers, weekend stays |
-| **Long-term** | Per month | Expats, students, locals relocating |
-
-**Core value proposition:** *"Verified properties, manual bank payment, zero broker fees."*
-
-**Primary actors:**
-- **Guest** — browses, books, pays via manual bank transfer, uploads receipt
-- **Host** — creates listings, awaits admin approval, manages bookings
-- **Admin / Super Admin** — full God mode over everything
-
-**Current platform state:**
-- Backend: fully operational, all endpoints tested end-to-end (booking → payment → verify → confirmed)
-- Frontend: public site + auth + guest dashboard + host dashboard working
-- Admin panel: overview, moderation (listings/hosts/payments/bookings/users), bank accounts, banners done. **Broadcasts page needs rebuild.**
-- Full i18n (EN + AM) with modular per-namespace files, cookie persistence, admin-editable amenities/property-types lists via config
-- Manual bank payment workflow fully implemented with admin verification queue
-
----
-
-## 2. MONOREPO & TECH STACK (LOCKED — DO NOT CHANGE)
-
-### Package manager
-- **npm workspaces** (not pnpm, not yarn)
-- Root `package.json` has `workspaces: ["apps/*", "packages/*"]`
-- `apps/web`, `apps/api`, `packages/shared` are the three workspaces
-
-### JavaScript only
-- **No TypeScript** — every file is `.js` or `.jsx`
-- **No Prisma** — raw SQL with `pg` (node-postgres)
-- API files use `.js` extensions in import paths (Node ESM)
-- Web files use `.jsx` extensions explicitly
-
-### Apps
-
-**`apps/web` — Next.js 15.5**
-- App Router
-- React 19
-- Tailwind CSS 3.4 (NOT v4)
-- `next/font/google` for fonts (self-hosted, no CDN)
-- `next/image` for image optimization
-- Path alias: `@/*` maps to `apps/web/src/*` (jsconfig.json)
-- Server Components + Client Components (`'use client'` when needed)
-
-**`apps/api` — Express 4**
-- Runs as Express 4 (Node ESM)
-- Serverless entry via `serverless-http` (Vercel Pattern A)
-- Dev entry: `apps/api/src/server.js` (nodemon watches changes)
-- Serverless entry: `apps/api/index.js`
-- Path alias: relative imports only
-
-**`packages/shared` — pure JS package**
-- Name: `@marefiyaye/shared`
-- Zero runtime dependencies
-- Contains: constants, validators (Zod), formatters, config schema, i18n dictionary builder + all locale files
-- Imported by both `apps/api` and `apps/web`
-- **Critical rule:** no `.json` files in shared — everything is `.js` with named exports
-
-### Deployment
-- **Pattern A — single Vercel project**
-- `apps/web/src/app/api/v1/[...path]/route.js` — catch-all handler that imports the Express app via `serverless-http` and forwards every `/api/v1/*` request to it
-- In local dev, frontend fetches API directly at `http://localhost:5000` (via `apps/web/src/lib/env.js` which resolves `NEXT_PUBLIC_API_BASE_URL` differently for dev vs prod)
-
-### Database
-- **PostgreSQL on Neon** (free tier)
-- Raw SQL migrations tracked in `schema_migrations` table with checksums
-- Connection pool: **max 5 connections** (Neon free tier limit — see `apps/api/src/db/pool.js` — has retry logic + pool warmup for cold starts)
-- SSL enforced: `sslmode=require`
-
-### Auth
-- **Roll-your-own JWT** (no Auth.js, no NextAuth)
-- Access token: 15 min (dev currently set to 24h to avoid re-login churn — **must revert to 15m for production**)
-- Refresh token: 7 days, stored hashed (SHA-256) in `refresh_tokens` table
-- Transport: **httpOnly cookies**
-  - `mrf_access` — path `/`
-  - `mrf_refresh` — path `/api/v1/auth`
-- Impersonation supported — access token carries `impersonatedBy: adminId` claim
-- RBAC middleware: `requireAuth`, `requireRole`, `requireAdmin`, `requireSuperAdmin`
-- `forbidImpersonation` middleware blocks sensitive actions while impersonating
-
-### Storage
-- **Cloudinary** for all image uploads (listings + payment receipts)
-- Signed upload flow:
-  1. Client → `POST /api/v1/uploads/sign` { category }
-  2. Server validates clock skew (against DB's NOW()), returns signed params
-  3. Client → POST directly to Cloudinary with the file + params
-  4. Cloudinary → returns `{ secure_url, public_id }`
-  5. Client → submits those to the API in the booking/listing payload
-- Cloudinary creds in `.env.local` (`CLOUDINARY_CLOUD_NAME`, `_API_KEY`, `_API_SECRET`, `_FOLDER`)
-
-### Icons
-- `lucide-react` only
-
-### Fonts
-- `Plus Jakarta Sans` (Latin) + `Noto Sans Ethiopic` (Amharic)
-- Loaded via `next/font/google` in `apps/web/src/app/layout.jsx`
-
-### Styling architecture (very important)
-3-layer system to avoid Tailwind vs custom-CSS conflict:
-
-1. **`styles/tokens.css`** — CSS custom properties for all design values:
-   - Colors (brand, neutral scale, semantic `--color-bg/fg/muted/border/ring`)
-   - Radii (`--radius-sm/md/lg`)
-   - Shadows (`--shadow-card/search/modal`)
-   - Motion (`--duration-fast/normal/slow`, `--ease-out`)
-   - Fonts (`--font-sans`, `--font-ethiopic`)
-   - **Color format is space-separated RGB** (e.g. `150 75 0`) not hex — because Tailwind uses `rgb(var(--token) / <alpha-value>)` pattern
-
-2. **`tailwind.config.js`** — maps Tailwind utilities to token vars:
-   - `colors.brand.500 = 'rgb(var(--color-brand-500) / <alpha-value>)'`
-   - `colors.bg/fg/muted/border/ring` = semantic tokens
-   - `borderRadius.sm/md/lg`, `boxShadow.card/search/modal`
-   - `fontFamily.sans` reads `var(--font-sans)`
-
-3. **`styles/components.css`** — only ~50 lines of handwritten CSS for:
-   - `.scrollbar-thin`, `.scrollbar-hide` (WebKit pseudo-elements)
-   - `.animate-fade-up`, `.animate-fade-in`, `.animate-slide-in-right`, `.animate-scale-in` (keyframes)
-   - Focus ring polish
-
-**Dark mode:** toggled via `.dark` class on `<html>`; `--color-*` variables override in `.dark {}` block inside `tokens.css`. Persisted in localStorage, respects system preference.
-
-**Rule:** NEVER write raw hex in JSX. Use Tailwind utility or CSS var only.
-
-### Animations
-- Allowed keyframes: `fade-up`, `fade-in`, `scale-in`, `slide-in-right`
-- Durations from tokens
-- Respect `prefers-reduced-motion` (not yet wired — pending)
-
----
-
-## 3. DESIGN DECISIONS (locked)
-
-### Language & i18n
-- **English (en) + Amharic (am)** supported today
-- Structure: `packages/shared/src/i18n/locales/<lang>/<namespace>.js`
-- **Keys are flat dotted strings** — e.g. `auth.login.title`, `booking.checkout.amount`
-- Adding a new language = add `LANGUAGES` entry + create `locales/<code>/*.js` files
-- No `next-intl`, no `react-i18next` — custom `I18nContext` uses `getTranslator(lang)` from `@marefiyaye/shared/i18n`
-- **NEVER display hardcoded strings in UI** — everything is a key
-- **Never use JSON locale files** — always `.js` default exports
-- i18n has a `preloadDictionaries()` function that must be called at API boot and in root layout before any `getTranslator()` call
-- `getTranslator()` is **synchronous** and throws if dict not loaded. Async variant is `getTranslatorAsync()`
-- Detected language priority: cookie `mrf_lang` → Accept-Language header → default `en`
-
-### Auth strategy
-- JWT (not sessions)
-- Access token 15m in prod
-- Refresh token in httpOnly cookie, rotating
-- Impersonation = admin issues a token for another user, `impersonatedBy` claim present
-- All auth middleware rejects with `AppError` and i18n keys
-
-### Payments — manual bank transfer only
-- Guest books → booking created with status `pending_payment`
-- Guest transfers money outside platform → uploads receipt via Cloudinary
-- Guest submits payment → payment status `under_review`, booking status `payment_review`
-- Admin opens `/admin/payments` → views receipt thumbnail → verifies or rejects
-- Verified → payment `verified`, booking `confirmed`, commission frozen on booking row
-- Rejected → payment `rejected` with reason, booking back to `pending_payment` for retry
-- **Commission is resolved at confirmation time** from `settings.commission.default_rate` or listing override, then **frozen** on the booking row (`commission_rate` + `commission_amount` columns) for historical accuracy
-
-### Role model
-- `guest` (default for new signups)
-- `host` (promoted after creating host profile — `hosts` table row exists)
-- `admin`
-- `super_admin` (bootstrap admin from env)
-- **Role is on `users.role`, but host existence is checked via `hosts` table** — a user can be `guest` role but have a `hosts` row. This is important: `ProfileMenu` uses `/host/me` to decide whether to show "Become a host" or "Host dashboard"
-
-### Notification strategy
-- **In-app notifications only** (no email, no SMS, no push yet)
-- Stored in `notifications` table with i18n keys + interpolation params — rendered in user's preferred language on read
-- Frontend polls `GET /me/notifications?limit=1` every 30s for unread count
-
-### File uploads
-- All images → Cloudinary with signed uploads
-- Max 5MB per image
-- Allowed formats: `jpg`, `jpeg`, `png`, `webp`
-- Multiple uploads supported per listing (max 10)
-- **Image reordering** supported in `ImageUploader` (drag + arrow buttons)
-
-### Settings / God panel
-- Every admin-configurable value is a row in `settings` table
-- Schema declared in `packages/shared/src/config/schema/*.js`
-- Categories: `general`, `commission`, `payment`, `features`, `theme`, `booking`, `seo`
-- **Settings are validated** against Zod-like validators declared in schema
-- Public settings exposed via `GET /config/public` (unauthenticated)
-- Full settings via `GET /config/admin` (requires `requireAdmin`)
-- Update via `PATCH /config/admin/:key` — **NOT `/admin/config/:key`** (this was a bug we fixed)
-- **Editable lists (amenities, property types) are stored as `array` settings** with `{ value, icon?, label_en, label_am }` shape — edited via custom chip editor UI, NOT raw JSON
-
-### File/folder conventions
-- **Components:** plural folders for domains that have many files: `components/ui/`, `components/layout/`, `components/listings/`, `components/bookings/` (NOTE: booking widgets live in `components/booking/` singular — inconsistency we accept for now), `components/admin/`, `components/upload/`
-- **Admin pages:** `apps/web/src/app/(admin)/admin/<feature>/page.jsx` with `<feature>/_<Feature>Client.jsx` for the client component
-- **Public pages:** `apps/web/src/app/(main)/<feature>/page.jsx` with `<feature>/_<Feature>Client.jsx`
-- **Auth pages:** `apps/web/src/app/(auth)/<login|register>/page.jsx` — these DON'T get header/footer (split-screen layout)
-- **Route groups:** `(main)`, `(auth)`, `(admin)` — parentheses are not part of URL
-- **Client components are prefixed with `_`** in the route folder (e.g. `_StaysClient.jsx`) — kept out of routing
-- **API models:** `apps/api/src/models/<resource>.model.js`
-- **API services:** `apps/api/src/services/<resource>.service.js`
-- **API controllers:** `apps/api/src/controllers/<resource>.controller.js`
-- **API routes:** `apps/api/src/routes/<resource>.routes.js`
-
-### Component naming
-- `Button`, `Input`, `Modal`, `Card` — UI primitives
-- `_StaysClient`, `_HomeClient`, `_BankAccountsClient` — page-scoped client shells
-- Compound components use dot notation: `Card.Header`, `Card.Title`, `Card.Content`, `Card.Footer`
-
-### API versioning
-- All routes under `/api/v1/`
-- Response envelope: `{ success: true, data: {...}, meta?: {...} }` for success
-- Error envelope: `{ success: false, error: { code, message, field?, details? } }` for failure
-- `message` is always an i18n key or plain string — frontend translates i18n keys via `t()`
-
----
-
-## 4. DESIGN SYSTEM & UX PATTERNS
-
-### Colors (as stored in tokens)
-- Brand primary: `#964B00` (brown) — legacy from your HTML prototype
-- Brand 50: `#fff1f2` (light pink)
-- Brand 100: `#ffe4e6`
-- Brand 500: `#964B00` ← main
-- Brand 600: `#472400` ← hover
-- Brand 700: `#c10736`
-- Neutral scale: standard Tailwind-like from 50 → 900
-- Neutral 850: `#1e1e1e` (custom, used for dark surfaces)
-- Neutral 900: `#141414`
-
-### Typography
-- Font sizes: use `.text-hero` (fluid `clamp`) for main headings
-- Body: `text-sm` for most UI, `text-xs` for helpers, `text-base` for content
-- Amharic text automatically uses Noto Sans Ethiopic via `[lang='am']` CSS rule
-
-### Responsive design principles (very important — Athanasius enforced mobile-first)
-- **Default = mobile.** Write unprefixed classes for 360px first
-- Add breakpoints only when layout must change
-- `sm:` at 640px, `md:` at 768px, `lg:` at 1024px, `xl:` at 1280px
-- **`Container` component** — every page wraps content in `<Container>` (handles max-width + responsive gutters)
-- **`Stack` component** — vertical rhythm primitive (sizes `xs / sm / md / lg / xl / hero`)
-- **`Grid` component** — responsive grid presets (`cards / cards-wide / two-col / three-col / four-col / sidebar`)
-- **Every page** uses `<Container><Stack>` — never hand-roll `max-w-7xl mx-auto px-4`
-- **Touch targets ≥ 44px** — buttons, links, form fields
-- Full-width primary CTAs on mobile, auto-width on `sm:`+
-- Section padding: `py-6 sm:py-10 lg:py-14` — never fixed
-- Cards: mobile 1-col, `sm:` 2-col, `lg:` 3-col
-
-### Interactions & animation
-- Card hover: image zooms `scale-[1.05]`, shadow deepens, transition 500ms
-- Buttons: `transition-colors` 150ms, active state darkens
-- Modals: `animate-fade-up` (slide + fade)
-- Calendar day hover: `bg-neutral-100` circle
-- Focus rings: `ring-2 ring-brand-500 ring-offset-2 ring-offset-bg` — never outline none
-- Toasts: slide in from right, auto-dismiss 4s, pause on hover
-
-### Layout patterns
-- **Header:** sticky top, backdrop-blur, 3 columns (logo | nav | controls), height 16 (mobile) / 20 (desktop)
-- **Announcement bar:** above header, dark background (`bg-neutral-900`), dismissible, links to promo
-- **Footer:** 4-column on desktop, stacked on mobile
-- **Breadcrumb:** thin bar under header, always starts with Home icon
-- **Admin sidebar:** fixed left 64 wide on `lg:`, drawer on mobile
-- **Auth pages:** split-screen (brown brand panel left, form right), no header/footer
-
-### Form patterns
-- Labels: `text-sm font-bold text-fg`
-- Required indicator: red asterisk after label
-- Error text: `text-xs font-semibold text-red-600` below input
-- Help text: `text-xs text-muted` below input
-- Focus: `focus:ring-2 focus:ring-brand-500 focus:border-brand-500`
-
-### Empty states
-- Icon (48px, muted color) + heading + subtitle + CTA button
-- Centered, `py-16`
-
-### Loading states
-- Skeletons (`Skeleton` primitive) used in route-level `loading.jsx` files
-- **Rule: every new route must have a `loading.jsx`** using `Skeleton`, `SkeletonText`, `SkeletonCard`, `SkeletonGrid`
-
----
-
-## 5. CRITICAL BUGS & GOTCHAS DISCOVERED
-
-This section is the most valuable for continuation. Everything here was discovered the hard way.
-
-### 🚨 BUG #1 — Inputs lose focus after 1-2 keystrokes inside `<Modal>`
-
-**Symptom:** When typing in a form field inside a modal, only 1-2 characters appear, then the field stops accepting input. Focus is lost. To type more, the admin must click again.
-
-**Root cause:** The `Modal`, `Input`, and `Button` primitives from `components/ui/` cause **remounting** of the input subtree on every keystroke. Even though `Modal` was refactored to persist the portal (via `display: none` instead of `return null`), the bug persisted.
-
-**Confirmed via test:** Replacing an entire page with **raw HTML inputs/buttons/overlays** (no imports from `components/ui/`) makes the bug disappear.
-
-**Current workaround (in use across the admin panel):**
-- **Every admin page with a form or modal** uses **raw HTML `<input>`, `<textarea>`, `<select>`, `<button>`, `<div className="fixed inset-0 ...">`** instead of the primitives
-- **Do NOT use `components/ui/Modal` or `components/ui/Input` in admin modals**
-- **Do NOT use `useConfirm()` in admin modals** — use native `window.confirm()` for simple yes/no
-- This pattern has been verified working across: bank accounts, banners, broadcasts (soon), listings moderation, hosts verification, users suspension
-
-**Files using the raw-HTML pattern (all verified focus-safe):**
-- `apps/web/src/app/(admin)/admin/bank-accounts/_BankAccountsClient.jsx`
-- `apps/web/src/app/(admin)/admin/banners/_BannersClient.jsx`
-- `apps/web/src/app/(admin)/admin/listings/_ListingsAdminClient.jsx`
-- `apps/web/src/app/(admin)/admin/hosts/_HostsAdminClient.jsx`
-- `apps/web/src/app/(admin)/admin/users/_UsersAdminClient.jsx`
-
-**To be converted to raw-HTML pattern:**
-- `apps/web/src/app/(admin)/admin/broadcasts/_BroadcastsClient.jsx` (needs full rebuild)
-- `apps/web/src/app/(admin)/admin/settings/page.jsx` — the `SettingsForm.jsx` component uses primitives and likely has the same bug
-
-**Future work:** find the actual root cause in `Button`/`Input`/`Modal` and fix at source so we can use primitives again.
-
-**Strong suspect:** `Button` is `forwardRef` + may have internal state or unstable `key`. Investigate after the broadcast feature ships.
-
-### 🚨 BUG #2 — Cloudinary 400 "Invalid Signature" (RESOLVED — was clock skew)
-
-**Root cause:** Windows system clock was 30 days ahead. Cloudinary rejects signatures whose timestamp is >1 hour off from their server time.
-
-**Fix applied:**
-- User synced Windows clock manually (was the actual fix)
-- `cloudinary.service.js` now has `assertClockIsSane()` that queries `SELECT EXTRACT(EPOCH FROM NOW()) * 1000` and rejects signature generation if drift > 10 minutes
-- Also surfaced Cloudinary's actual error message in `ImageUploader.jsx` so future failures are debuggable
-
-**Note:** system clock skew will break this again if user changes machine/date. Always verify `node -e "console.log(Date.now())"` returns a plausible timestamp (10 digits starting with 1.79 for 2026).
-
-### 🚨 BUG #3 — Neon DB cold-start timeouts (RESOLVED — pool hardening)
-
-**Symptom:** Every query takes 10+ seconds then times out. All endpoints return 500.
-
-**Root cause:** Neon free tier aggressively closes idle connections. Our pool config (`poolMax: 10`) exceeded Neon's per-project connection cap under cold start.
-
-**Fix applied in `apps/api/src/db/pool.js`:**
-- `SAFE_POOL_MAX = 5` (regardless of env `DATABASE_POOL_MAX`)
-- `SAFE_POOL_MIN = 1`
-- `SAFE_CONNECTION_TIMEOUT_MS = 15_000`
-- `SAFE_IDLE_TIMEOUT_MS = 10_000`
-- `SAFE_STATEMENT_TIMEOUT_MS = 30_000`
-- `keepAlive: true`
-- `healthCheck()` retries 3× with 1s backoff
-- `warmup()` runs `SELECT 1` on boot so first real request is fast
-- `query()` retries once on transient errors (connection reset, timeout, etc.)
-- `withTransaction()` retries the whole transaction on transient errors
-
-**Server boot order in `apps/api/src/server.js`:**
-1. `healthCheck()` (must pass)
-2. `warmup()`
-3. `preloadDictionaries()`
-4. `app.listen()`
-
-**If queries still time out:** it's the user's internet, not the code. Confirmed on 2026-11-04.
-
-### 🚨 BUG #4 — i18n dictionary not loaded on auth pages (RESOLVED)
-
-**Symptom:** `/login` throws `Dictionary for "en" is not loaded` in server component.
-
-**Fix:** `RootLayout` calls `await preloadDictionaries()` before rendering. `login/page.jsx` and `register/page.jsx` use `getTranslatorAsync(DEFAULT_LANGUAGE)` instead of sync `getTranslator()`.
-
-### 🚨 BUG #5 — API config PATCH path was wrong
-
-**Symptom:** Settings save returns 404.
-
-**Wrong path:** `/api/v1/admin/config/:key`
-**Correct path:** `/api/v1/config/admin/:key`
-
-Any new settings-related client code must use `/config/admin/:key`.
-
-### 🚨 BUG #6 — Header/Footer missing on `(main)` pages
-
-**Symptom:** Homepage, `/stays`, detail pages had no header or footer.
-
-**Fix:** `apps/web/src/app/(main)/layout.jsx` must exist and render `<ImpersonationBanner /> <AnnouncementBar /> <Header /> <main>{children}</main> <Footer />`. The `(admin)/layout.jsx` and `(auth)/layout.jsx` have their own layouts.
-
-**Rule:** Root `layout.jsx` only handles providers + fonts. No header/footer. Every route group has its own chrome.
-
-### 🚨 BUG #7 — Ad-hoc placeholders breaking builds
-
-Multiple times, `touch` created empty files that later caused `Cannot find module` or `must be a Client Component` errors. **Lesson:** verify file contents with `wc -l` after pasting. Never trust that a paste landed.
-
-### 🚨 BUG #8 — `useId()` + remount = focus loss
-
-Any component that generates an `id` via `useId()` will change its id if it remounts, which breaks `<label htmlFor>` association and focus. This is why the raw-HTML pattern works — it doesn't remount.
-
----
-
-## 6. ENVIRONMENT VARIABLES (current `.env.local` shape)
-
-### `apps/api/.env.local`
-```
-NODE_ENV=development
-API_PORT=5000
-API_ORIGIN=http://localhost:5000
-WEB_ORIGIN=http://localhost:3000
-
-DATABASE_URL=postgresql://neondb_owner:<PASSWORD>@ep-<endpoint>-pooler.<region>.aws.neon.tech/neondb?sslmode=require
-DATABASE_SSL=true
-
-JWT_ACCESS_SECRET=<32+ chars>
-JWT_REFRESH_SECRET=<32+ chars>
-JWT_ACCESS_EXPIRES=24h     # dev only — must be 15m for production
-JWT_REFRESH_EXPIRES=7d
-JWT_ISSUER=marefiyaye
-
-COOKIE_SECURE=false         # must be true in production
-COOKIE_SAME_SITE=lax
-COOKIE_DOMAIN=
-
-ADMIN_EMAIL=admin@marefiyaye.com
-ADMIN_PASSWORD=ChangeMeStrong123!
-ADMIN_FULL_NAME=Marefiyaye Admin
-ADMIN_PHONE=+251900000000
-
-RATE_LIMIT_WINDOW_MS=900000
-RATE_LIMIT_MAX_REQUESTS=100
-
-CLOUDINARY_CLOUD_NAME=<real>
-CLOUDINARY_API_KEY=<15 digits>
-CLOUDINARY_API_SECRET=<real>
-CLOUDINARY_FOLDER=marefiyaye
-CLOUDINARY_UPLOAD_PRESET=unsigned
-
-UPLOAD_MAX_FILE_SIZE_MB=5
-LOG_LEVEL=debug
-```
-
-### `apps/web/.env.local`
-```
-NEXT_PUBLIC_API_BASE_URL=/api/v1
-NEXT_PUBLIC_APP_NAME=MAREFIYAYE
-NEXT_PUBLIC_APP_NAME_AM=ማረፊያዬ
-NEXT_PUBLIC_DEFAULT_LANG=en
-NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=<real>
-```
-
-**Never commit `.env.local`. Never hardcode secrets.** All config goes through `apps/api/src/config/env.js` (validated via Zod) and `apps/web/src/lib/env.js`.
-
----
-
-## 7. DEV WORKFLOW
-
-### Starting everything
-```bash
-cd ~/OneDrive/Documents/Coding/HOME/marefiyaye
-npm run dev        # runs both web (3000) and api (5000) via concurrently
-```
-
-### Running just one
-```bash
-npm run dev:web
-npm run dev:api
-```
-
-### Seeding the database (first-time / reset)
-```bash
-npm run migrate    # applies all SQL migrations, tracks in schema_migrations
-npm run seed       # creates admin from env + inserts all default settings
-```
-
-### Seeding test listings (dev only)
-```bash
-node apps/api/scripts/seed-listings.js
-```
-
-### Running a one-off query
-```bash
-node --input-type=module -e "
-import pg from 'pg';
-import dotenv from 'dotenv';
-dotenv.config({ path: 'apps/api/.env.local' });
-const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
-const { rows } = await pool.query('SELECT id, email, role FROM users');
-console.table(rows);
-await pool.end();
-"
-```
-
-### Clearing Next.js cache (when things seem stuck)
-```bash
-rm -rf apps/web/.next
-```
-
-### Merging files for review
-Single script: `tools/merge.sh` (in `tools/` folder).
-```bash
-./tools/merge.sh <phase-name> <file1> <file2> ...
-./tools/merge.sh <phase-name> --dir <directory> --ext .jsx
-./tools/merge.sh <phase-name> --from-list <listfile>
-```
-Outputs `<phase-name>_files.txt` in repo root.
-
----
-
-## 8. SECURITY RULES (already enforced — do not weaken)
-
-- **All SQL is parameterized** — `$1, $2` placeholders only. No string interpolation anywhere.
-- **All API inputs are validated** with Zod schemas from `@marefiyaye/shared/validators`. Route handlers call `validateBody(schema)` middleware before the controller.
-- **JWT secrets ≥ 32 chars** — validated at boot by `env.js`.
-- **Cookies are httpOnly + SameSite=lax** — access token in `mrf_access`, refresh in `mrf_refresh` (path-scoped).
-- **`helmet`** with CSP enabled in prod.
-- **`express-rate-limit`** on `/api` (100 req / 15 min by default).
-- **CORS** strictly limits to `WEB_ORIGIN` + `API_ORIGIN`.
-- **Impersonation requires `super_admin` role** — enforced in auth controller.
-- **Passwords hashed with bcryptjs cost 12**.
-- **Refresh tokens stored hashed (SHA-256)**, revocable, rotation on use.
-- **Admin actions write to `audit_logs`** — actor, action, resource, before/after, IP, UA.
-- **XSS protection:** React escapes by default. `dangerouslySetInnerHTML` is banned.
-- **No `.env` values leak to frontend** — only `NEXT_PUBLIC_*` are exposed, and only via `env.js`.
-
----
-
-## 9. DATABASE SCHEMA SUMMARY
-
-**Migrations are applied in order.** Do NOT edit a migration that has been run — create a new one.
-
-Tables exist for:
-- `users`, `refresh_tokens`, `impersonation_logs`
-- `hosts`
-- `listings`, `listing_approval_history`
-- `bookings`, `booking_events`
-- `payments`
-- `favorites`, `reviews`
-- `settings` (God panel values)
-- `bank_accounts`
-- `banners`, `broadcast_messages`
-- `notifications`
-- `audit_logs`
-- `schema_migrations` (migration runner tracking)
-
-**`broadcast_messages` current columns:**
-- `id`, `title_en`, `title_am`, `body_en`, `body_am`
-- `audience` (`all | guests | hosts | admins`)
-- `severity` (`info | success | warning | danger`)
-- `starts_at`, `ends_at`, `is_active`, `created_at`, `updated_at`
-
-**Coming in Migration 014:**
-- Add `delivery_type` (`notification | banner | popup | sticky_note`)
-- Add `target_roles` (jsonb array of roles, null = all)
-- Add `target_user_ids` (jsonb array of UUIDs, null = all)
-- Add `priority` (int, default 0)
-- Add `metadata` (jsonb, for delivery-specific config like position, dismiss time)
-- New table `broadcast_reads` — `broadcast_id`, `user_id`, `read_at`
-
----
-
-## 10. NEXT TASK — BROADCAST ENGINE (Sub-Step 1.9D)
-
-### What's confirmed
-- **Q1: Rename `broadcast/` folder → `broadcasts/` (plural)** — sidebar already links to `/admin/broadcasts`
-- **Q2: 4 delivery types** — `notification`, `banner`, `popup`, `sticky_note`
-- **Q3: Targeting model** — `all | roles | users` (with searchable user picker for single/multiple selection)
-- **Q4: WYSIWYG preview** — render via shared `BroadcastRenderer` component (single source of truth for admin preview AND frontend display)
-- **D2: Keep `audience` field as secondary filter** — targeting is primary, audience is additive
-- **D3: Preview via `BroadcastRenderer`** — one component in both places
-
-### What's pending (needs confirmation on next chat)
-User asked me for "what files to provide" but never pasted the merge output. **Next session should ask for:**
-
-```bash
-./tools/merge.sh broadcast-audit \
-  packages/shared/src/constants.js \
-  apps/api/src/models/broadcast.model.js \
-  apps/api/src/services/broadcast.service.js \
-  apps/api/src/controllers/broadcast.controller.js \
-  apps/api/src/routes/broadcast.routes.js \
-  apps/api/src/db/migrations/009_banners_broadcasts.sql \
-  "apps/web/src/app/(admin)/admin/broadcast/page.jsx" \
-  apps/web/src/contexts/ToastContext.jsx
-```
-
-### 3-Sub-Step plan (locked)
-1. **Schema** — Migration 014, updated constants, new `broadcast_reads` table
-2. **API** — new model queries, `getForUser(userId, role)`, `markAsRead`, `getDeliveryStats`, controller endpoints (`GET /me/broadcasts`, `POST /me/broadcasts/:id/read`, rewritten admin CRUD)
-3. **UI** — rewritten `_BroadcastsClient.jsx` using **raw HTML pattern** (focus-safe), targeting picker (radio all/roles/users + multi-select for roles/users with searchable user picker), delivery type picker, live preview panel via `BroadcastRenderer`, priority slider, schedule pickers
-
-### New component needed
-`apps/web/src/components/broadcast/BroadcastRenderer.jsx` — renders one broadcast according to `delivery_type`:
-- `notification` → renders a mock notification card (used in admin preview and frontend notification list)
-- `banner` → renders the actual top bar (uses `bg_color`/`fg_color` from `metadata`)
-- `popup` → renders a mock modal (used in admin preview; frontend mounts a real portal modal)
-- `sticky_note` → renders the bottom-right card
-
-### Follow the RAW HTML PATTERN for the admin form
-Do NOT use `components/ui/Modal`, `components/ui/Input`, `components/ui/Button`, or `useConfirm()` in `_BroadcastsClient.jsx`. Use raw HTML + `window.confirm()` for confirmations. This is verified working and matches the pattern used in bank accounts, banners, listings, hosts, users.
-
----
-
-## 11. REMAINING WORK AFTER BROADCASTS
-
-### High priority
-1. **`SettingsForm.jsx`** — convert to raw HTML pattern (has same focus bug), plus:
-   - Category tabs at top (not vertical collapse)
-   - Sticky save bar at bottom of viewport
-   - Sub-group headings within categories (General has 4 sub-groups)
-   - Unit labels on number fields (`%`, `ETB`, `MB`, `hours`, `days`)
-   - Placeholders on every field
-   - Per-field "Reset to default"
-   - Bulk "Save all changes" across tabs
-   - Search across settings
-   - Unsaved-changes warning on navigate
-   - Remove dead settings (`theme.primary_hover_color`, `theme.primary_contrast_color`, `theme.radius_sm/md/lg`, `commission.rounding_strategy`, `commission.maximum_fee`, `booking.min_lead_time_hours`, `payment.allow_partial_payment`, `seo.structured_data_enabled`)
-   - Add missing settings (`general.logo_url`, `general.favicon_url`, `general.whatsapp_number`, `general.business_hours`, `payment.receipts_retention_days`, `commission.host_payout_delay_days`, `booking.cancellation_window_hours`, `booking.free_cancellation_enabled`, `features.reviews_require_booking`, `features.host_can_edit_approved_listing`, `listing.max_images`, `listing.require_amharic_title`, `notification.email_enabled`, `security.max_login_attempts`, `security.session_idle_minutes`)
-   - Field renderer registry (so adding a new type = 1 registration, not editing a monolith)
-
-2. **Extract remaining hardcoded values to config:**
-   - Max images per listing (10) → `listing.max_images`
-   - Max image size (5 MB) → `uploads.max_file_size_mb`
-   - Image MIME whitelist → `uploads.allowed_mime_types`
-   - Cancellation window (24h in copy) → `booking.cancellation_window_hours`
-   - Min booking advance → `booking.min_advance_days`
-   - Footer neighborhood links → `home.featured_cities` (array config)
-   - Platform fee fallback `0.03` in `BookingWidget.jsx` → read from `config.commission.default_rate` only
-   - Trust badge "Hybrid Stay" → `listing.hybrid_badge_enabled`
-   - CDN transform params (`w=1200&q=80`) → `uploads.cdn_transform_params`
-
-3. **Broadcast delivery frontend integration:**
-   - `BroadcastRenderer` mounted in root layout (or a provider)
-   - Fetches `GET /me/broadcasts` on login
-   - Shows popups one at a time, banners stacked, sticky notes stacked, notifications in dropdown
-   - Mark as read via `POST /me/broadcasts/:id/read`
-
-### Medium priority
-4. **Deployment to Vercel** (Pattern A working confirmed locally; needs `vercel.json` + env vars + serverless-http adapter test)
-5. **Full E2E customer journey verification** — register → book → pay → admin verifies → booking confirmed — with screenshots
-6. **Auth token TTL** — revert dev `JWT_ACCESS_EXPIRES` from `24h` back to `15m` for production
-7. **`COOKIE_SECURE=true`** in production
-8. **CSP** — `helmet` has CSP disabled in dev; enable in prod
-9. **Convert `SettingsForm.jsx`** to raw HTML pattern (see #1)
-
-### Nice to have
-10. Find and fix root cause of focus bug in `Button`/`Input`/`Modal` at source so primitives can be reused everywhere
-11. Convert old `_ListingsAdminClient.jsx`, `_HostsAdminClient.jsx`, etc. — already raw HTML, no change needed
-12. Mobile testing across all admin pages
-13. Amharic translations for new admin keys
-14. `prefers-reduced-motion` support
-15. Rate limit on `/uploads/sign`
-16. Cloudinary upload confirmation endpoint (verify asset actually exists before trusting public_id)
-
----
-
-## 12. KNOWN GOOD / KNOWN BROKEN — STATE AS OF HANDOFF
-
-### ✅ Verified working
-- Full homepage at `/` — hero, search, 3 listings
-- `/stays` browse with filters (URL-driven)
-- `/stays/[id]` detail page with gallery, booking widget, calendar, guest picker
-- `/login` + `/register` split-screen (EN + AM)
-- `/bookings` guest dashboard
-- `/bookings/[id]` detail with timeline
-- `/saved` favorites
-- `/host/register` + `/host/dashboard` + `/host/dashboard/listings/new` (image uploader with drag/paste/URL, image reordering)
-- `/admin` overview dashboard
-- `/admin/listings`, `/admin/payments`, `/admin/hosts`, `/admin/bookings`, `/admin/users` (all focus-safe raw HTML)
-- `/admin/bank-accounts` (focus-safe raw HTML)
-- `/admin/banners` (focus-safe raw HTML)
-- `/admin/audit-log`
-- `/admin/settings` renders (but likely has focus bug in `SettingsForm.jsx`)
-- Login as `admin@marefiyaye.com` / `ChangeMeStrong123!` → admin access works
-- Booking → payment → admin verify → booking confirmed E2E verified
-- Cloudinary uploads work (image dragged from OS or pasted)
-- Neon DB works (with pool retry)
-
-### 🟡 Needs attention
-- `/admin/broadcasts` — **404 currently** (folder is `broadcast/`, sidebar links to `broadcasts/`)
-- `/admin/settings` — form fields likely lose focus due to primitive usage; needs raw HTML conversion
-- `/admin/banners` — verified focus-safe but delivered before the raw-HTML confirmation; **verify after rebuild**
-
-### ⚪ Not started
-- Broadcast engine (Sub-Step 1.9D) — waiting for user to confirm and provide merged files
-- Deployment
-- Full customer journey test with screenshots
-- Admin settings cleanup (schema + UX)
-
----
-
-## 13. LOCKED RULES FOR NEW CHAT
-
-Bro, these are non-negotiable. Enforce them from message 1.
-
-### Code standards
-1. **No hardcoded values** — everything through `process.env` → `config/env.js` → consumed
-2. **Parameterized SQL only** — no string interpolation in queries
-3. **Zod validation on every input** — schemas in `@marefiyaye/shared/validators`
-4. **Complete files only** — no "add this line" partial updates. If a file changes, deliver the whole file
-5. **Detailed JSDoc comments on every function** — `@param`, `@returns`, one-line purpose
-6. **No "Updated/Fixed/Added" comments** — only "why", never "what changed"
-7. **`.js` files use `.js` extension in imports** (Node ESM)
-8. **`.jsx` files use `.jsx` extension in imports**
-9. **Client components must have `'use client'` as the very first line**
-10. **File-level header comment** with path, purpose, dependencies
-
-### UX standards
-11. **Mobile-first** — unprefixed classes = 360px viewport
-12. **Every page uses `<Container>` + `<Stack>`** — no hand-rolled padding
-13. **Every new route has `loading.jsx`** with `Skeleton`
-14. **Every destructive action** uses `window.confirm()` (raw) OR `useConfirm()` (context) — never silent
-15. **Every form field** has label + placeholder + error/help slot
-16. **Touch targets ≥ 44px**
-
-### Admin panel standards
-17. **Admin modals use raw HTML pattern** (see Bug #1)
-18. **Admin forms use raw HTML inputs** — no `components/ui/Input`
-19. **Admin delete/destructive use `window.confirm()`** — no `useConfirm()` (which uses primitives)
-20. **Every admin action that changes state writes to `audit_logs`** via the service layer
-
-### i18n standards
-21. **Zero hardcoded strings in UI** — every visible string is a `t('key')` call
-22. **Add i18n keys to `packages/shared/src/i18n/locales/en/<ns>.js` AND `.../am/<ns>.js`** — both files, same key
-23. **Locale files are `.js` default exports** — no `.json`
-
-### Communication standards
-24. **Be brutally honest** — if something is wrong, say so. Do not sugarcoat
-25. **Do not guess** — ask for the specific file(s) you need before writing code
-26. **Deliver in verifiable sub-steps** — schema first, then API, then UI
-27. **Use `tools/merge.sh` for audits** — user provides merged files for review
-
----
-
-## 14. WHAT THE USER VALUES (Athanasius's explicit requests)
-
-- **Professional, brutal honesty** — he wants to be told when something is wrong, not appeased
-- **Detailed comments** — he explicitly demanded JSDoc on every function, "modern codebase" style
-- **Config-driven everything** — he's been insistent that nothing is hardcoded
-- **Mobile-first** — he stopped me from breaking responsive layout
-- **No "half-baked features"** — he'll reject minimal patches that don't solve the root problem
-- **The `.call()` bug** — he was furious when I kept shipping broken primitives. He wants root cause fixes, not workarounds
-- **"God control"** — admin must be able to configure literally everything from the panel
-- **The 3 principles he stated at the start:**
-  1. Config-driven (nothing hardcoded)
-  2. Security always (parameterized SQL, validation, XSS protection, rate limiting)
-  3. Complete files, professional comments, meaningful names, consistent style
-
----
-
-## 15. OPEN QUESTIONS FOR NEW CHAT
-
-Before writing any broadcast code, ask the user:
-
-1. **Provide the merge output:** the `broadcast-audit_files.txt` from the command in Section 10
-2. **Confirm** the 4 delivery types (`notification`, `banner`, `popup`, `sticky_note`) — user already said "yes, all you can add or minimize"
-3. **Confirm** targeting modes (`all`, `roles`, `users`) — user confirmed "single user, multiple users like selected users by me, role based, for all"
-4. **Confirm** WYSIWYG preview via `BroadcastRenderer` — user confirmed "yes I accept your recommendation"
-5. **Confirm** `audience` stays as secondary filter — user already said "yes"
-
-**Once files are pasted, proceed immediately with Sub-Step 1 (schema + rename).**
-
----
-
-## 16. GLOSSARY
-
-- **God Panel** — the admin settings page where every configurable value lives
-- **Config-driven** — every behavior/pricing/label is stored in the `settings` table (or `bank_accounts`, `banners`, etc.) and editable from the admin UI without touching code
-- **Manual payment** — guest transfers via CBE/Telebirr/CBE Birr, uploads receipt, admin verifies
-- **Hybrid stay** — a listing that supports both short-term (nightly) and long-term (monthly) rates
-- **Broadcast** — a message sent from admin to guests/hosts/subset of users in a chosen delivery style
-- **Delivery type** — how a broadcast is shown to the recipient (notification bell / banner bar / popup modal / sticky note)
-- **Targeting** — who receives the broadcast (all / role-based / specific users)
-- **Raw HTML pattern** — the workaround for the focus bug; admin modals use plain `<input>` / `<button>` / fixed divs instead of `components/ui/` primitives
-- **Impersonation** — super_admin can issue a token that makes them act as another user
-- **Config schema** — `packages/shared/src/config/schema/*.js`, declares every setting with type/default/labels/validator
-- **The focus bug** — inputs inside modals lose focus after 1-2 chars; caused by remounting; workaround is raw HTML; root cause not yet found
-- **Pattern A** — single Vercel deployment; Express runs inside Next.js API catch-all handler via `serverless-http`
-
----
-
-## 17. FIRST MESSAGE FOR NEW CHAT
-
-When starting the new chat, paste this as the opening message:
-
-> "Continuing MAREFIYAYE project. Read the attached documentation. I'm on Sub-Step 1.9D — Broadcast Engine. Before writing any code, deliver the 3 sub-steps: (1) Migration 014 schema + rename `broadcast/` → `broadcasts/`, (2) API rewrite for targeting + delivery types, (3) UI rebuild with raw HTML pattern + live preview. Follow ALL locked rules in the doc. Ask me for the merged broadcast-audit files if needed."
-
----
-
-**End of documentation.**
-
-**This is the complete handoff. A new chat with zero context can read this and continue immediately.** 🎯
-
-here is the file structure
-
-
-".
+.
+|-- .gitignore
+|-- .npmrc
+|-- README.md
 |-- apps
 |   |-- api
+|   |   |-- index.js
+|   |   |-- package.json
 |   |   |-- scripts
 |   |   |   |-- login.sh
 |   |   |   `-- seed-listings.js
-|   |   |-- src
-|   |   |   |-- config
-|   |   |   |   |-- constants.js
-|   |   |   |   `-- env.js
-|   |   |   |-- controllers
-|   |   |   |   |-- admin.controller.js
-|   |   |   |   |-- auth.controller.js
-|   |   |   |   |-- bankAccount.controller.js
-|   |   |   |   |-- banner.controller.js
-|   |   |   |   |-- bookings.controller.js
-|   |   |   |   |-- broadcast.controller.js
-|   |   |   |   |-- config.controller.js
-|   |   |   |   |-- favorites.controller.js
-|   |   |   |   |-- host.controller.js
-|   |   |   |   |-- i18n.controller.js
-|   |   |   |   |-- listings.controller.js
-|   |   |   |   |-- notifications.controller.js
-|   |   |   |   |-- payments.controller.js
-|   |   |   |   `-- uploads.controller.js
-|   |   |   |-- db
-|   |   |   |   |-- migrations
-|   |   |   |   |   |-- 001_users.sql
-|   |   |   |   |   |-- 002_hosts.sql
-|   |   |   |   |   |-- 003_listings.sql
-|   |   |   |   |   |-- 004_bookings.sql
-|   |   |   |   |   |-- 005_payments.sql
-|   |   |   |   |   |-- 006_favorites_reviews.sql
-|   |   |   |   |   |-- 007_settings.sql
-|   |   |   |   |   |-- 008_bank_accounts.sql
-|   |   |   |   |   |-- 009_banners_broadcasts.sql
-|   |   |   |   |   |-- 010_i18n_overrides.sql
-|   |   |   |   |   |-- 011_notifications.sql
-|   |   |   |   |   |-- 012_audit_logs.sql
-|   |   |   |   |   |-- 013_foreign_keys.sql
-|   |   |   |   |   `-- 014_drop_i18n_overrides.sql
-|   |   |   |   |-- migrate.js
-|   |   |   |   |-- pool.js
-|   |   |   |   `-- seed.js
-|   |   |   |-- middleware
-|   |   |   |   |-- audit.middleware.js
-|   |   |   |   |-- auth.middleware.js
-|   |   |   |   |-- error.middleware.js
-|   |   |   |   |-- impersonation.middleware.js
-|   |   |   |   |-- notFound.middleware.js
-|   |   |   |   |-- role.middleware.js
-|   |   |   |   `-- validate.middleware.js
-|   |   |   |-- models
-|   |   |   |   |-- auditLog.model.js
-|   |   |   |   |-- bankAccount.model.js
-|   |   |   |   |-- banner.model.js
-|   |   |   |   |-- booking.model.js
-|   |   |   |   |-- broadcast.model.js
-|   |   |   |   |-- favorite.model.js
-|   |   |   |   |-- host.model.js
-|   |   |   |   |-- i18nOverride.model.js
-|   |   |   |   |-- listing.model.js
-|   |   |   |   |-- notification.model.js
-|   |   |   |   |-- payment.model.js
-|   |   |   |   |-- refreshToken.model.js
-|   |   |   |   |-- review.model.js
-|   |   |   |   |-- settings.model.js
-|   |   |   |   `-- user.model.js
-|   |   |   |-- routes
-|   |   |   |   |-- admin.routes.js
-|   |   |   |   |-- auth.routes.js
-|   |   |   |   |-- bankAccount.routes.js
-|   |   |   |   |-- banner.routes.js
-|   |   |   |   |-- bookings.routes.js
-|   |   |   |   |-- broadcast.routes.js
-|   |   |   |   |-- config.routes.js
-|   |   |   |   |-- favorites.routes.js
-|   |   |   |   |-- host.routes.js
-|   |   |   |   |-- i18n.routes.js
-|   |   |   |   |-- index.js
-|   |   |   |   |-- listings.routes.js
-|   |   |   |   |-- notifications.routes.js
-|   |   |   |   |-- payments.routes.js
-|   |   |   |   `-- uploads.routes.js
-|   |   |   |-- services
-|   |   |   |   |-- audit.service.js
-|   |   |   |   |-- auth.service.js
-|   |   |   |   |-- bankAccount.service.js
-|   |   |   |   |-- banner.service.js
-|   |   |   |   |-- booking.service.js
-|   |   |   |   |-- broadcast.service.js
-|   |   |   |   |-- cloudinary.service.js
-|   |   |   |   |-- commission.service.js
-|   |   |   |   |-- config.service.js
-|   |   |   |   |-- host.service.js
-|   |   |   |   |-- i18n.service.js
-|   |   |   |   |-- listing.service.js
-|   |   |   |   |-- notification.service.js
-|   |   |   |   `-- payment.service.js
-|   |   |   |-- utils
-|   |   |   |   |-- asyncHandler.js
-|   |   |   |   |-- jwt.js
-|   |   |   |   |-- logger.js
-|   |   |   |   |-- password.js
-|   |   |   |   `-- response.js
-|   |   |   |-- app.js
-|   |   |   `-- server.js
-|   |   |-- .env.example
-|   |   |-- .env.local
-|   |   |-- index.js
-|   |   `-- package.json
+|   |   `-- src
+|   |       |-- app.js
+|   |       |-- config
+|   |       |   |-- constants.js
+|   |       |   `-- env.js
+|   |       |-- controllers
+|   |       |   |-- admin.controller.js
+|   |       |   |-- auth.controller.js
+|   |       |   |-- bankAccount.controller.js
+|   |       |   |-- banner.controller.js
+|   |       |   |-- bookings.controller.js
+|   |       |   |-- broadcast.controller.js
+|   |       |   |-- config.controller.js
+|   |       |   |-- favorites.controller.js
+|   |       |   |-- host.controller.js
+|   |       |   |-- listings.controller.js
+|   |       |   |-- notifications.controller.js
+|   |       |   |-- payments.controller.js
+|   |       |   `-- uploads.controller.js
+|   |       |-- db
+|   |       |   |-- migrate.js
+|   |       |   |-- migrations
+|   |       |   |   |-- 001_users.sql
+|   |       |   |   |-- 002_hosts.sql
+|   |       |   |   |-- 003_listings.sql
+|   |       |   |   |-- 004_bookings.sql
+|   |       |   |   |-- 005_payments.sql
+|   |       |   |   |-- 006_favorites_reviews.sql
+|   |       |   |   |-- 007_settings.sql
+|   |       |   |   |-- 008_bank_accounts.sql
+|   |       |   |   |-- 009_banners_broadcasts.sql
+|   |       |   |   |-- 010_i18n_overrides.sql
+|   |       |   |   |-- 011_notifications.sql
+|   |       |   |   |-- 012_audit_logs.sql
+|   |       |   |   |-- 013_foreign_keys.sql
+|   |       |   |   `-- 014_drop_i18n_overrides.sql
+|   |       |   |-- pool.js
+|   |       |   `-- seed.js
+|   |       |-- middleware
+|   |       |   |-- auth.middleware.js
+|   |       |   |-- error.middleware.js
+|   |       |   |-- impersonation.middleware.js
+|   |       |   |-- notFound.middleware.js
+|   |       |   |-- role.middleware.js
+|   |       |   `-- validate.middleware.js
+|   |       |-- models
+|   |       |   |-- auditLog.model.js
+|   |       |   |-- bankAccount.model.js
+|   |       |   |-- banner.model.js
+|   |       |   |-- booking.model.js
+|   |       |   |-- broadcast.model.js
+|   |       |   |-- favorite.model.js
+|   |       |   |-- host.model.js
+|   |       |   |-- i18nOverride.model.js
+|   |       |   |-- listing.model.js
+|   |       |   |-- notification.model.js
+|   |       |   |-- payment.model.js
+|   |       |   |-- refreshToken.model.js
+|   |       |   |-- review.model.js
+|   |       |   |-- settings.model.js
+|   |       |   `-- user.model.js
+|   |       |-- routes
+|   |       |   |-- admin.routes.js
+|   |       |   |-- auth.routes.js
+|   |       |   |-- bankAccount.routes.js
+|   |       |   |-- banner.routes.js
+|   |       |   |-- bookings.routes.js
+|   |       |   |-- broadcast.routes.js
+|   |       |   |-- config.routes.js
+|   |       |   |-- favorites.routes.js
+|   |       |   |-- host.routes.js
+|   |       |   |-- index.js
+|   |       |   |-- listings.routes.js
+|   |       |   |-- notifications.routes.js
+|   |       |   |-- payments.routes.js
+|   |       |   `-- uploads.routes.js
+|   |       |-- server.js
+|   |       |-- services
+|   |       |   |-- audit.service.js
+|   |       |   |-- auth.service.js
+|   |       |   |-- bankAccount.service.js
+|   |       |   |-- banner.service.js
+|   |       |   |-- booking.service.js
+|   |       |   |-- broadcast.service.js
+|   |       |   |-- cloudinary.service.js
+|   |       |   |-- commission.service.js
+|   |       |   |-- config.service.js
+|   |       |   |-- host.service.js
+|   |       |   |-- listing.service.js
+|   |       |   |-- notification.service.js
+|   |       |   `-- payment.service.js
+|   |       `-- utils
+|   |           |-- asyncHandler.js
+|   |           |-- jwt.js
+|   |           |-- logger.js
+|   |           |-- password.js
+|   |           `-- response.js
 |   `-- web
+|       |-- jsconfig.json
+|       |-- next.config.js
+|       |-- package.json
+|       |-- postcss.config.js
 |       |-- public
-|       |   |-- images
-|       |   |   `-- .gitkeep
-|       |   `-- favicon.ico
+|       |   |-- favicon.ico
+|       |   `-- images
+|       |       `-- .gitkeep
 |       |-- src
 |       |   |-- app
 |       |   |   |-- (admin)
 |       |   |   |   |-- admin
+|       |   |   |   |   |-- _AdminOverviewClient.jsx
 |       |   |   |   |   |-- audit-log
 |       |   |   |   |   |   |-- loading.jsx
 |       |   |   |   |   |   `-- page.jsx
@@ -930,10 +140,12 @@ here is the file structure
 |       |   |   |   |   |   |-- loading.jsx
 |       |   |   |   |   |   `-- page.jsx
 |       |   |   |   |   |-- i18n
+|       |   |   |   |   |-- layout.jsx
 |       |   |   |   |   |-- listings
 |       |   |   |   |   |   |-- _ListingsAdminClient.jsx
 |       |   |   |   |   |   |-- loading.jsx
 |       |   |   |   |   |   `-- page.jsx
+|       |   |   |   |   |-- page.jsx
 |       |   |   |   |   |-- payments
 |       |   |   |   |   |   |-- _PaymentsAdminClient.jsx
 |       |   |   |   |   |   |-- loading.jsx
@@ -941,12 +153,9 @@ here is the file structure
 |       |   |   |   |   |-- settings
 |       |   |   |   |   |   |-- loading.jsx
 |       |   |   |   |   |   `-- page.jsx
-|       |   |   |   |   |-- users
-|       |   |   |   |   |   |-- _UsersAdminClient.jsx
-|       |   |   |   |   |   `-- page.jsx
-|       |   |   |   |   |-- _AdminOverviewClient.jsx
-|       |   |   |   |   |-- layout.jsx
-|       |   |   |   |   `-- page.jsx
+|       |   |   |   |   `-- users
+|       |   |   |   |       |-- _UsersAdminClient.jsx
+|       |   |   |   |       `-- page.jsx
 |       |   |   |   `-- layout.jsx
 |       |   |   |-- (auth)
 |       |   |   |   |-- login
@@ -965,6 +174,7 @@ here is the file structure
 |       |   |   |   `-- dashboard
 |       |   |   |       `-- page.jsx
 |       |   |   |-- (main)
+|       |   |   |   |-- _HomeClient.jsx
 |       |   |   |   |-- bookings
 |       |   |   |   |   |-- [id]
 |       |   |   |   |   |   |-- _BookingDetailClient.jsx
@@ -973,36 +183,35 @@ here is the file structure
 |       |   |   |   |   `-- page.jsx
 |       |   |   |   |-- host
 |       |   |   |   |   |-- dashboard
+|       |   |   |   |   |   |-- _HostDashboardClient.jsx
 |       |   |   |   |   |   |-- listings
 |       |   |   |   |   |   |   `-- new
 |       |   |   |   |   |   |       |-- _NewListingClient.jsx
 |       |   |   |   |   |   |       `-- page.jsx
-|       |   |   |   |   |   |-- _HostDashboardClient.jsx
 |       |   |   |   |   |   `-- page.jsx
 |       |   |   |   |   `-- register
 |       |   |   |   |       |-- _HostRegisterClient.jsx
 |       |   |   |   |       `-- page.jsx
-|       |   |   |   |-- saved
-|       |   |   |   |   |-- _SavedClient.jsx
-|       |   |   |   |   `-- page.jsx
-|       |   |   |   |-- _HomeClient.jsx
 |       |   |   |   |-- layout.jsx
-|       |   |   |   `-- page.jsx
+|       |   |   |   |-- page.jsx
+|       |   |   |   `-- saved
+|       |   |   |       |-- _SavedClient.jsx
+|       |   |   |       `-- page.jsx
 |       |   |   |-- api
 |       |   |   |   `-- v1
 |       |   |   |       `-- [...path]
 |       |   |   |           `-- route.js
-|       |   |   |-- stays
-|       |   |   |   |-- [id]
-|       |   |   |   |   |-- _DetailClient.jsx
-|       |   |   |   |   `-- page.jsx
-|       |   |   |   |-- _StaysClient.jsx
-|       |   |   |   `-- page.jsx
 |       |   |   |-- error.jsx
 |       |   |   |-- globals.css
 |       |   |   |-- layout.jsx
 |       |   |   |-- loading.jsx
-|       |   |   `-- not-found.jsx
+|       |   |   |-- not-found.jsx
+|       |   |   `-- stays
+|       |   |       |-- [id]
+|       |   |       |   |-- _DetailClient.jsx
+|       |   |       |   `-- page.jsx
+|       |   |       |-- _StaysClient.jsx
+|       |   |       `-- page.jsx
 |       |   |-- components
 |       |   |   |-- admin
 |       |   |   |   |-- ApprovalRow.jsx
@@ -1037,7 +246,6 @@ here is the file structure
 |       |   |   |   |-- NotificationsDropdown.jsx
 |       |   |   |   |-- ProfileMenu.jsx
 |       |   |   |   |-- Stack.jsx
-|       |   |   |   |-- StickyNote.jsx
 |       |   |   |   `-- ThemeToggle.jsx
 |       |   |   |-- listings
 |       |   |   |   |-- AmenitiesList.jsx
@@ -1105,65 +313,59 @@ here is the file structure
 |       |       |-- components.css
 |       |       |-- responsive.css
 |       |       `-- tokens.css
-|       |-- .env.example
-|       |-- jsconfig.json
-|       |-- next.config.js
-|       |-- package.json
-|       |-- postcss.config.js
 |       `-- tailwind.config.js
-|-- packages
-|   `-- shared
-|       |-- src
-|       |   |-- config
-|       |   |   |-- schema
-|       |   |   |   |-- booking.js
-|       |   |   |   |-- commission.js
-|       |   |   |   |-- features.js
-|       |   |   |   |-- general.js
-|       |   |   |   |-- payment.js
-|       |   |   |   |-- seo.js
-|       |   |   |   `-- theme.js
-|       |   |   |-- defaults.js
-|       |   |   `-- index.js
-|       |   |-- i18n
-|       |   |   |-- locales
-|       |   |   |   |-- am
-|       |   |   |   |   |-- admin.js
-|       |   |   |   |   |-- auth.js
-|       |   |   |   |   |-- booking.js
-|       |   |   |   |   |-- bookings.js
-|       |   |   |   |   |-- common.js
-|       |   |   |   |   |-- errors.js
-|       |   |   |   |   |-- home.js
-|       |   |   |   |   |-- listings.js
-|       |   |   |   |   |-- notifications.js
-|       |   |   |   |   `-- validation.js
-|       |   |   |   `-- en
-|       |   |   |       |-- admin.js
-|       |   |   |       |-- auth.js
-|       |   |   |       |-- booking.js
-|       |   |   |       |-- bookings.js
-|       |   |   |       |-- common.js
-|       |   |   |       |-- errors.js
-|       |   |   |       |-- home.js
-|       |   |   |       |-- listings.js
-|       |   |   |       |-- notifications.js
-|       |   |   |       `-- validation.js
-|       |   |   |-- README.md
-|       |   |   `-- index.js
-|       |   |-- constants.js
-|       |   |-- formatters.js
-|       |   |-- index.js
-|       |   `-- validators.js
-|       `-- package.json
-|-- tools
-|   `-- merge.sh
-|-- .env.example
-|-- .gitignore
-|-- .npmrc
-|-- README.md
+|-- current-structure.txt
 |-- file-structure.txt
 |-- package-lock.json
 |-- package.json
+|-- packages
+|   `-- shared
+|       |-- index.js
+|       |-- package.json
+|       `-- src
+|           |-- config
+|           |   |-- defaults.js
+|           |   |-- index.js
+|           |   `-- schema
+|           |       |-- booking.js
+|           |       |-- commission.js
+|           |       |-- features.js
+|           |       |-- general.js
+|           |       |-- payment.js
+|           |       |-- seo.js
+|           |       `-- theme.js
+|           |-- constants.js
+|           |-- formatters.js
+|           |-- i18n
+|           |   |-- README.md
+|           |   |-- index.js
+|           |   `-- locales
+|           |       |-- am
+|           |       |   |-- admin.js
+|           |       |   |-- auth.js
+|           |       |   |-- booking.js
+|           |       |   |-- bookings.js
+|           |       |   |-- common.js
+|           |       |   |-- errors.js
+|           |       |   |-- home.js
+|           |       |   |-- listings.js
+|           |       |   |-- notifications.js
+|           |       |   `-- validation.js
+|           |       `-- en
+|           |           |-- admin.js
+|           |           |-- auth.js
+|           |           |-- booking.js
+|           |           |-- bookings.js
+|           |           |-- common.js
+|           |           |-- errors.js
+|           |           |-- home.js
+|           |           |-- listings.js
+|           |           |-- notifications.js
+|           |           `-- validation.js
+|           |-- index.js
+|           `-- validators.js
+|-- tools
+|   `-- merge.sh
 `-- vercel.json
-"
+
+80 directories, 288 files
