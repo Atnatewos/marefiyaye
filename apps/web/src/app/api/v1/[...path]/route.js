@@ -101,6 +101,11 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+/* ── Route segment config (Vercel Serverless Function behavior) ──────────── */
+
+export const maxDuration = 30;
+export const preferredRegion = 'fra1';
+
 /* ── Module-level singleton ──────────────────────────────────────────────── */
 
 /**
@@ -133,13 +138,17 @@ async function bootstrap() {
   if (bootstrapPromise) return bootstrapPromise;
 
   bootstrapPromise = (async () => {
-    const [{ default: serverless }, { default: app }, { preloadDictionaries }, { warmup }] =
-      await Promise.all([
-        import('serverless-http'),
-        import('@marefiyaye/api/src/app.js'),
-        import('@marefiyaye/shared/i18n'),
-        import('@marefiyaye/api/src/db/pool.js'),
-      ]);
+    const [
+      { default: serverless },
+      { default: app },
+      { preloadDictionaries },
+      { warmup },
+    ] = await Promise.all([
+      import('serverless-http'),
+      import('@marefiyaye/api/src/app.js'),
+      import('@marefiyaye/shared/i18n'),
+      import('@marefiyaye/api/src/db/pool.js'),
+    ]);
 
     /* Preload i18n before any request can call getTranslator() */
     try {

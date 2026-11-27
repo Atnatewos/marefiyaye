@@ -6,7 +6,7 @@
   "outputDirectory": "apps/web/.next",
   "regions": ["fra1"],
   "functions": {
-    "apps/web/src/app/api/v1/[...path]/route.js": {
+    "apps/web/src/app/api/**/route.js": {
       "maxDuration": 30,
       "memory": 1024
     }
