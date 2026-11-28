@@ -5,9 +5,7 @@
  *
  * Purpose:
  *   Chrome wrapper for every user-facing page inside the `(main)` route group.
- *   Route groups in parentheses don't affect the URL — `(main)/page.jsx`
- *   serves at `/`. This keeps the app chrome cleanly separate from the
- *   auth shell in `(auth)/`.
+ *   Includes the BroadcastRenderer for platform-wide announcements.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
@@ -15,6 +13,7 @@ import AnnouncementBar from '@/components/layout/AnnouncementBar.jsx';
 import ImpersonationBanner from '@/components/layout/ImpersonationBanner.jsx';
 import Header from '@/components/layout/Header.jsx';
 import Footer from '@/components/layout/Footer.jsx';
+import BroadcastRenderer from '@/components/layout/BroadcastRenderer.jsx';
 
 export default function MainLayout({ children }) {
   return (
@@ -22,6 +21,7 @@ export default function MainLayout({ children }) {
       <ImpersonationBanner />
       <AnnouncementBar />
       <Header />
+      <BroadcastRenderer />
       <main className="flex-grow">{children}</main>
       <Footer />
     </>
